@@ -1,0 +1,19 @@
+python-dotenv>=0.5.1
+awscli
+#dvc-s3
+jupyter
+pycaret[full]
+ydata-profiling
+mlflow 
+#dvc
+click
+Sphinx
+coverage
+flake8
+hydra-core
+
+# local package
+-e .
+
+
+
