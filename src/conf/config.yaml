@@ -20,7 +20,7 @@ cloud_paths:
   dvc_path: ${cloud_paths.experiment_path}/dvc-store
 
 file_names:
-  raw_file : raw_file.csv
+  raw_file : raw-data.csv
   data_file: datafile.csv
   train_features: train_features.csv
   train_labels: train_labels.csv
@@ -32,7 +32,7 @@ file_names:
 
 data_fields:
   description: About what is the dataset
-  label: match
+  label: payroll_employee_day
   
   
 
