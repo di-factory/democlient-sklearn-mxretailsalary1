@@ -28,7 +28,7 @@ file_names:
   validation_labels: valid_labels.csv
   test_features: test_features.csv
   test_labels: test_labels.csv
-  data_profiling_report: data_profiling_report
+  data_profiling_report: data_profiling_report.html
 
 data_fields:
   description: About what is the dataset
