@@ -16,13 +16,18 @@ BUCKET = dif-b-democlient-sklearn
 # COMMANDS                                                                      #
 #################################################################################
 
+## dockerize_api 
+docker_api:
+	$ sudo docker image build -f "API/Dockerfile" -t mxsalaryapi:latest .
+
+
 ## Install Python Dependencies
 pip-all: test_environment
 	$ python3 -m pip install -U pip setuptools wheel
 	$ python3 -m pip install -r requirements.txt
 
 ## Make Dataset
-data_set:
+data_set:	
 	$ python3 src/data/make_dataset.py 
 
 ## Make Model Trainning

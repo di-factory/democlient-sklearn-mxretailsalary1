@@ -4,12 +4,13 @@ general_ml:
   cloud: AWS
 
 paths:
-  project_dir: ...
-  raw_data: ${hydra:runtime.cwd}/data/raw
-  interim_data: ${hydra:runtime.cwd}/data/interim
-  processed_data: ${hydra:runtime.cwd}/data/processed
-  reports: ${hydra:runtime.cwd}/reports
-
+  project_dir: /home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1
+  raw_data: ${paths.project_dir}/data/raw
+  interim_data: ${paths.project_dir}/data/interim
+  processed_data: ${paths.project_dir}/data/processed
+  reports: ${paths.project_dir}/reports
+  models: ${paths.project_dir}/models
+  api: ${paths.project_dir}/API
 
 cloud_paths:
   bucket_path: dif-b-democlient-sklearn
@@ -21,6 +22,8 @@ cloud_paths:
 
 file_names:
   raw_file : raw-data.csv
+  processed_data: processed_data.csv
+  processed_unseen_data: processed_unseen_data.csv
   data_file: datafile.csv
   train_features: train_features.csv
   train_labels: train_labels.csv
@@ -29,6 +32,8 @@ file_names:
   test_features: test_features.csv
   test_labels: test_labels.csv
   data_profiling_report: data_profiling_report.html
+  ml_profiling_best: ml_profiling_best
+  api_ml_profiling: ml_profiling_best_API
 
 data_fields:
   description: About what is the dataset

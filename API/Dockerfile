@@ -4,7 +4,7 @@ FROM python:3.8-slim
 
 WORKDIR /app
 
-ADD . /app
+ADD API /app
 
 RUN apt-get update && apt-get install -y libgomp1
 
