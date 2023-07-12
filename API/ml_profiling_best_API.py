@@ -13,8 +13,8 @@ app = FastAPI()
 model = load_model("/home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1/API/ml_profiling_best_API")
 
 # Create input/output pydantic models
-input_model = create_model("/home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1/API/ml_profiling_best_API_input", **{'state': 'Puebla', 'income_employee_day': 2995.992919921875, 'employees_business': 4})
-output_model = create_model("/home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1/API/ml_profiling_best_API_output", prediction=416.57812)
+input_model = create_model("/home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1/API/ml_profiling_best_API_input", **{'state': 'Jalisco', 'income_employee_day': 4245.9755859375, 'employees_business': 5})
+output_model = create_model("/home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1/API/ml_profiling_best_API_output", prediction=335.00455)
 
 
 # Define predict function
