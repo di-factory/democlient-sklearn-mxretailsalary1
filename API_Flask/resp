@@ -1,0 +1,30 @@
+    """Let's predict salary for working in retail, given a
+    state of Mexico, how much $ I will add to sales, and how
+    many employees (with me) are working there.
+    ---
+    parameters:
+        - name: state
+          in: query
+          type: string
+          required: true
+        - name: income_employe
+          in: query
+          type: number
+          required: true
+        - name: employees_business
+          in: query
+          type: number
+          required: true
+          
+    responses:
+          200:
+              description: Output value
+              schema:
+                id: prediction
+                properties:
+                    predictions:
+                        type: number
+                        description: the prediction
+                        default: 0.0
+                        
+    """

@@ -3,6 +3,7 @@ awscli
 #dvc-s3
 jupyter
 pycaret[full]
+autoviz
 ydata-profiling
 mlflow 
 #dvc
@@ -11,6 +12,7 @@ Sphinx
 coverage
 flake8
 hydra-core
+flassger
 
 # local package
 -e .
