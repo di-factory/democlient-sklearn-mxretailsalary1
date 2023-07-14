@@ -1,16 +1,40 @@
+#version = july 14-2023
+
 general_ml:
-  seed: 123
-  encoding: iso-8859-1
+  seed: 123 #seed for any experiment and model
+  encoding: iso-8859-1 #used for open files with specific encodind
   cloud: AWS
 
 paths:
-  project_dir: /home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1
-  raw_data: ${paths.project_dir}/data/raw
-  interim_data: ${paths.project_dir}/data/interim
-  processed_data: ${paths.project_dir}/data/processed
-  reports: ${paths.project_dir}/reports
-  models: ${paths.project_dir}/models
-  api: ${paths.project_dir}/API
+  project_dir: /home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1 #project directory in this instance
+  
+  raw_data_dir: ${paths.project_dir}/data/raw #raw_data directory
+  processed_data_dir: ${paths.project_dir}/data/processed #processed data, from raw as result of data profiling (notebook)
+  interim_data_dir: ${paths.project_dir}/data/interim #intermidiate data, from processed as result of data profiling in pipeline
+
+  reports_dir: ${paths.project_dir}/reports #reports directory from all the project
+  models_dir: ${paths.project_dir}/models #where models are saved in different parts of pipeline
+  
+  api_pycaret_dir: ${paths.project_dir}/API/API_Pycaret #where pycaret saves create_api function (notebook)
+  api_fastapi_dir: ${paths.project_dir}/API/API_FastAPI #where API with Fastapi template resides
+  api_flask_dir: ${paths.project_dir}/API/API_Flask #where API with Flask template resides
+
+
+file_names:
+  raw_file : raw-data.csv #name of raw_data file
+  processed_data: processed_data.csv #name of processed data file
+  processed_unseen_data: processed_unseen_data.csv #name of processed UNSEEN data file
+  data_file: datafile.csv
+  train_features: train_features.csv
+  train_labels: train_labels.csv
+  validation_features: valid_features.csv
+  validation_labels: valid_labels.csv
+  test_features: test_features.csv
+  test_labels: test_labels.csv
+  data_profiling_report: data_profiling_report.html #Name of the report of data profiling (notebook)
+  ml_profiling_best: ml_profiling_best
+  api_ml_profiling: ml_profiling_best_API
+
 
 cloud_paths:
   bucket_path: dif-b-democlient-sklearn
@@ -20,24 +44,13 @@ cloud_paths:
   rawdata_path: ${cloud_paths.experiment_path}/raw-data
   dvc_path: ${cloud_paths.experiment_path}/dvc-store
 
-file_names:
-  raw_file : raw-data.csv
-  processed_data: processed_data.csv
-  processed_unseen_data: processed_unseen_data.csv
-  data_file: datafile.csv
-  train_features: train_features.csv
-  train_labels: train_labels.csv
-  validation_features: valid_features.csv
-  validation_labels: valid_labels.csv
-  test_features: test_features.csv
-  test_labels: test_labels.csv
-  data_profiling_report: data_profiling_report.html
-  ml_profiling_best: ml_profiling_best
-  api_ml_profiling: ml_profiling_best_API
-
 data_fields:
   description: About what is the dataset
-  label: payroll_employee_day
+  features: ['state',
+             'income_employee_day',
+             'employees_business',
+             'salary_employee_day']
+  label: salary_employee_day
   
   
 
