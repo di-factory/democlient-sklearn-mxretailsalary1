@@ -22,14 +22,16 @@ paths:
 
 file_names:
   raw_file : raw-data.csv #name of raw_data file
-  processed_data: processed_data.csv #name of processed data file
-  processed_unseen_data: processed_unseen_data.csv #name of processed UNSEEN data file
+
+  processed_data: processed_data.csv #name of processed data file (Notebook)
+  processed_unseen_data: processed_unseen_data.csv #name of processed UNSEEN data file (notebook)
+  
   data_file: datafile.csv
-  train_features: train_features.csv
+  train_features: train_features.csv #used for trainning
   train_labels: train_labels.csv
-  validation_features: valid_features.csv
+  validation_features: valid_features.csv #used in trainning, mainly in deep learning, otherwise must be concatenated with trainning
   validation_labels: valid_labels.csv
-  test_features: test_features.csv
+  test_features: test_features.csv #used to test trainning, at the end of each trainning function, as unseen data
   test_labels: test_labels.csv
   data_profiling_report: data_profiling_report.html #Name of the report of data profiling (notebook)
   ml_profiling_best: ml_profiling_best
@@ -46,8 +48,8 @@ cloud_paths:
 
 data_fields:
   description: About what is the dataset
-  features: ['state',
-             'income_employee_day',
+  features: ['state', #state of mexican republic 
+             'income_employee_day', #
              'employees_business',
              'salary_employee_day']
   label: salary_employee_day
@@ -56,14 +58,13 @@ data_fields:
 
 data_pipeline:
 
-  drop_features: ['field', 'from','zipcode','undergra','race','race_o']
-  keep_features: ['dec_o', 'dec', 'like', 'attr', 'from', 'zipcode', 'prob', 
-                  'like_o', 'fun', 'undergra', 'match']
-  standarize_text: ['field','from','zipcode','undergra']
-  str_to_float: ['income']
-  to_categorize: ['field', 'from','zipcode','undergra','race','race_o']
-  category_to_num: ['field','from','zipcode','undergra']
-  onehot_encoding: ['race','race_o']
+  drop_features: []
+  keep_features: []
+  standarize_text: []
+  str_to_float: []
+  to_categorize: []
+  category_to_num: []
+  onehot_encoding: ['state']
 
   #-----------------------------------------------
   # categorical variables to transform to numerical variables

@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from pipeline import datapipeline, datapipeline2, datapipeline3, datapipeline4
 
 
-def load_data(pathfile: os.path, encoding:str) -> pd.DataFrame:
+def load_data(pathfile: os.path, encoding:str='') -> pd.DataFrame:
     """
     to load data from raw directory and retunr a dataframe
     """
@@ -21,10 +21,11 @@ def transform_data(cfg : DictConfig, data: pd.DataFrame)-> pd.DataFrame:
     to transform data using a sklearn pipeline technology 
     """
     print(' STEP2: Transforming data using a PIPELINE')
+   
     dpl = datapipeline4(cfg)
-    labels = data.match
+    labels = data[cfg.data_fields.label]
     dpl.fit(data, labels)
-    df,_ = dpl.transform(data)
+    df= dpl.transform(data)
     print(df.describe())
 #    df = pd.DataFrame(dpl.fit_transform(data))
 
@@ -95,20 +96,22 @@ def write_spplited(pathfile_train_futures: os.path,
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")
 def main(cfg : DictConfig)-> None:
-    pathfile_l = os.path.join(cfg.paths.raw_data, cfg.file_names.raw_file)
-    data = load_data(pathfile_l, encoding=cfg.general_ml.encoding)
+    pathfile_l = os.path.join(cfg.paths.processed_data_dir, cfg.file_names.processed_data)
+    data = load_data(pathfile_l, 
+                     #encoding=<particular encoding>
+                     )
     
-    pathfile_s = os.path.join(cfg.paths.interim_data, cfg.file_names.data_file)
+    pathfile_s = os.path.join(cfg.paths.interim_data_dir, cfg.file_names.data_file)
     data = transform_data(cfg, data)
     
     write_transformed(pathfile_s, data)
 
-    pathfile_train_futures = os.path.join(cfg.paths.processed_data, cfg.file_names.train_features)
-    pathfile_train_labels = os.path.join(cfg.paths.processed_data, cfg.file_names.train_labels)
-    pathfile_validation_futures = os.path.join(cfg.paths.processed_data, cfg.file_names.validation_features)
-    pathfile_validation_labels = os.path.join(cfg.paths.processed_data, cfg.file_names.validation_labels)
-    pathfile_test_futures = os.path.join(cfg.paths.processed_data, cfg.file_names.test_features)
-    pathfile_test_labels = os.path.join(cfg.paths.processed_data, cfg.file_names.test_labels)
+    pathfile_train_futures = os.path.join(cfg.paths.processed_data_dir, cfg.file_names.train_features)
+    pathfile_train_labels = os.path.join(cfg.paths.processed_data_dir, cfg.file_names.train_labels)
+    pathfile_validation_futures = os.path.join(cfg.paths.processed_data_dir, cfg.file_names.validation_features)
+    pathfile_validation_labels = os.path.join(cfg.paths.processed_data_dir, cfg.file_names.validation_labels)
+    pathfile_test_futures = os.path.join(cfg.paths.processed_data_dir, cfg.file_names.test_features)
+    pathfile_test_labels = os.path.join(cfg.paths.processed_data_dir, cfg.file_names.test_labels)
     
     write_spplited(pathfile_train_futures, pathfile_train_labels, pathfile_validation_futures, 
                    pathfile_validation_labels, pathfile_test_futures,

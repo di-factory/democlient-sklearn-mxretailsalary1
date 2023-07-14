@@ -7,7 +7,9 @@ from sklearn.feature_extraction import FeatureHasher
 #from category_encoders import TargetEncoder
 import numpy as np
 from pycaret.internal.pipeline import Pipeline
-from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardScaler, SimpleImputer, FixImbalancer, TransformerWrapper, TargetEncoder
+from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardScaler, SimpleImputer 
+from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder, MinMaxScaler
+
 from sklearn.linear_model._logistic import LogisticRegression
 from imblearn.over_sampling import SMOTE
 
@@ -25,7 +27,6 @@ def datapipeline_new(cfg : DictConfig)-> Pipeline:
     )
     return datapipeline
 
-
 #------------------------------------------
 # --------- Below ... some examples -------
 #
@@ -34,65 +35,79 @@ def datapipeline4(cfg : DictConfig)-> Pipeline:
     #this pipeline is based mainly in Pycaret structure
     datapipeline= Pipeline(
         steps = [
-                 ('keep_fields', 
-                  pp.KeepNecessaryFeatures(variables_to_keep=cfg.data_pipeline.keep_features)),
+                 #('keep_fields', 
+                  #pp.KeepNecessaryFeatures(variables_to_keep=cfg.data_pipeline.keep_features)),
                  
                  ('numerical_imputer',
-                 TransformerWrapper(exclude=['match'],
-                                    include=['dec_o', 'dec', 'like', 'attr',
-                                             'prob', 'like_o', 'fun'],
-                                    transformer=SimpleImputer(add_indicator=False,
-                                                              copy=True,
-                                                              fill_value=None,
-                                                              keep_empty_features=False,
-                                                              missing_values=np.nan,
-                                                              strategy='mean',
-                                                              verbose='deprecated'))),
+                 TransformerWrapper(#exclude=['match'],
+                                    include=['income_employee_day',
+                                             'employees_business'],
+                                    transformer=SimpleImputer(#add_indicator=False,
+                                                              #copy=True,
+                                                              #fill_value=None,
+                                                              #keep_empty_features=False,
+                                                              #missing_values=np.nan,
+                                                              #strategy='mean',
+                                                              #verbose='deprecated',
+                                                              ))),
 
                  ('categorical_imputer',
-                 TransformerWrapper(exclude=['match'], include=['from', 'zipcode', 'undergra'],
-                   transformer=SimpleImputer(add_indicator=False, copy=True,
-                                             fill_value=None,
-                                             keep_empty_features=False,
-                                             missing_values=np.nan,
+                 TransformerWrapper(#exclude=['match'], 
+                                    include=['state'],
+                   transformer=SimpleImputer(#add_indicator=False, 
+                                             #copy=True,
+                                             #fill_value=None,
+                                             #keep_empty_features=False,
+                                             #missing_values=np.nan,
                                              strategy='most_frequent',
-                                             verbose='deprecated'))),
+                                             #verbose='deprecated',
+                                             ))),
 
-                 ('rest_ecoding',
-                 TransformerWrapper(exclude=['match'], include=['from', 'zipcode', 'undergra'],
-                   transformer=TargetEncoder(cols=['from', 'zipcode',
-                                                   'undergra'],
-                                             drop_invariant=False,
-                                             handle_missing='return_nan',
-                                             handle_unknown='value',
-                                             hierarchy=None,
-                                             min_samples_leaf=20,
-                                             return_df=True, smoothing=10,
-                                             verbose=True))),
+                 ('onehot_encoding',
+                 TransformerWrapper(include=['state'],
+                                    transformer=OneHotEncoder(cols=['state'],
+                                                              handle_missing='return_nan',
+                                                              use_cat_names=True))),
 
-                 ('balance',
+                # ('rest_ecoding',
+                # TransformerWrapper(exclude=['match'], include=['from', 'zipcode', 'undergra'],
+                #   transformer=TargetEncoder(cols=['from', 'zipcode',
+                #                                   'undergra'],
+                #                             drop_invariant=False,
+                #                             handle_missing='return_nan',
+                #                             handle_unknown='value',
+                #                             hierarchy=None,
+                #                             min_samples_leaf=20,
+                #                             return_df=True, smoothing=10,
+                #                             verbose=True))),
+
+                # ('balance',
                  #TransformerWrapper(exclude=None,  include=None,
                  #  transformer=FixImbalancer(estimator=SMOTE(#k_neighbors=5,
                  #                                            #n_jobs=None,
                  #                                            #random_state=None,
                  #                                            sampling_strategy='auto'
                  #                                            )))
-                    pp.Balancing_SMOTE_Encoding(label= cfg.data_fields.label)
-                 ), 
+                 #   pp.Balancing_SMOTE_Encoding(label= cfg.data_fields.label)
+                 #), 
 
-                 ('debbuging', pp.Debbuging()
-        
-                 ),
+                 #('debbuging', pp.Debbuging()
+                 #
+                 #),
 
-                 ('transformation',
-                 TransformerWrapper(exclude=['match'], include=None,
-                   transformer=PowerTransformer(copy=False, method='yeo-johnson',
-                                                standardize=False))),
 
-                 ('normalize',
-                 TransformerWrapper(exclude=['match'], include=None,
-                   transformer=StandardScaler(copy=False, with_mean=True,
-                                              with_std=True))),                                          
+                 ('transformation',TransformerWrapper(exclude=['match'], 
+                                   include=None,
+                                   transformer=PowerTransformer(#copy=False, 
+                                                                #method='yeo-johnson',
+                                                                standardize=False))),
+
+                 ('normalize', TransformerWrapper(#exclude=['match'], 
+                                                  #include=None,
+                                                  #transformer=StandardScaler(copy=False, 
+                                                  #                           with_mean=True,
+                                                  #                           with_std=True),
+                                                  transformer=MinMaxScaler())),                                          
                   ],
     verbose=True)
     return datapipeline
