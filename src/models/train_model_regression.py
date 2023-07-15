@@ -18,26 +18,23 @@ import os
 import mlflow
 import mlflow.sklearn
 from mlflow.models.signature import infer_signature
-import random
 
 
-regressor = Pipeline([('actual_estimator',
-                        VotingRegressor(estimators=
-                            [('CatBoost Regressor',CatBoostRegressor(verbose=False, loss_function='RMSE')),
-                             ('Gradient Boosting Regressor',GradientBoostingRegressor(random_state=123)),
-                             ('Huber Regressor', HuberRegressor()),
-                             ('Bayesian Ridge', BayesianRidge()),
-                             ('Ridge Regression', Ridge(random_state=123))],
-                        n_jobs=-1,
-                        weights=[0.2, 0.2, 0.2, 0.2, 0.2]))
-                    
-                     ])
+regressor = Pipeline([('actual_estimator', VotingRegressor(
+     estimators=[('CatBoost Regressor', CatBoostRegressor(verbose=False,
+                                                          loss_function='RMSE')),
+                 ('Gradient Boosting Regressor', GradientBoostingRegressor(random_state=123)),
+                 ('Huber Regressor', HuberRegressor()),
+                 ('Bayesian Ridge', BayesianRidge()),
+                 ('Ridge Regression', Ridge(random_state=123))],
+     n_jobs=-1,
+     weights=[0.2, 0.2, 0.2, 0.2, 0.2]))
+     ])
 
 kfold = KFold(n_splits=5, shuffle=True, random_state=123)
 
 
-
-def train_kfold(cfg : DictConfig, regressor:linear_model, kfold:KFold, score:dict)-> dict:
+def train_kfold(cfg: DictConfig, regressor: linear_model, kfold: KFold, score: dict)-> dict:
     # Load the data
     train_features = pd.read_csv(os.path.join(cfg.paths.processed_data_dir,
                                               cfg.file_names.train_features))

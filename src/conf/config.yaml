@@ -33,9 +33,13 @@ file_names:
   validation_labels: valid_labels.csv
   test_features: test_features.csv #used to test trainning, at the end of each trainning function, as unseen data
   test_labels: test_labels.csv
+  
   data_profiling_report: data_profiling_report.html #Name of the report of data profiling (notebook)
+  
   ml_profiling_best: ml_profiling_best
   api_ml_profiling: ml_profiling_best_API
+  datapipeline: datapipeline.pkl
+  model: model.pkl
 
 
 cloud_paths:
@@ -51,7 +55,7 @@ data_fields:
   features: ['state', #state of mexican republic 
              'income_employee_day', #
              'employees_business',
-             'salary_employee_day']
+            ]
   label: salary_employee_day
   
   

@@ -8,7 +8,7 @@ from pipeline import datapipeline, datapipeline2, datapipeline3, datapipeline4
 
 def load_data(pathfile: os.path, encoding:str='') -> pd.DataFrame:
     """
-    to load data from raw directory and retunr a dataframe
+    to load data from raw directory and return a dataframe
     """
     print(f' STEP1: loading raw data...@ {pathfile}')
     df = pd.read_csv(pathfile, encoding=encoding)

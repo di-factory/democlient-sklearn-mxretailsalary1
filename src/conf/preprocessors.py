@@ -44,9 +44,9 @@ class Debbuging(BaseEstimator,TransformerMixin):
         print('debbuging fit:', X.shape, y.shape)
         return self
 
-    def transform(self, X, y=None):
-        print('debbuging transform:', X.shape, y.shape)
-        return X, y
+    def transform(self, X):
+        print('debbuging transform:', X.shape)
+        return X
             
 
 
