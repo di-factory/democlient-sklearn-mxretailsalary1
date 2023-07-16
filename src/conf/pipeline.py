@@ -14,7 +14,7 @@ from sklearn.linear_model._logistic import LogisticRegression
 from imblearn.over_sampling import SMOTE
 
 import pandas as pd
-import preprocessors as pp
+import src.conf.preprocessors as pp
 
 #Here you will put the selected pipeline from the notebook MLProfiling
 @hydra.main(version_base=None, config_path="../conf", config_name="config")

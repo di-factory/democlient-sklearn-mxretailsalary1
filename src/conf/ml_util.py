@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
-from pipeline import datapipeline, datapipeline2, datapipeline3, datapipeline4
+from src.conf.pipeline import datapipeline, datapipeline2, datapipeline3, datapipeline4
 
 
 def load_data(pathfile: os.path, encoding:str='') -> pd.DataFrame:
@@ -26,7 +26,7 @@ def write_transformed(pathfile: os.path, data: pd.DataFrame)-> None:
      data.to_csv(pathfile, index=False)
      print(f'       Transformed data saved @ {pathfile}')
      print( '------------------------------------------------------')
-     print('\nDTYPES:\n',data.dtypes)
+     #print('\nDTYPES:\n',data.dtypes)
      print( '------------------------------------------------------')
 
 

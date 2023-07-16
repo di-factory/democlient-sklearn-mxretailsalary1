@@ -9,7 +9,7 @@ from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardS
 from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder, MinMaxScaler
 
 
-import src.data.preprocessors as pp
+import src.conf.preprocessors as pp
 from sklearn.model_selection import cross_val_score, KFold
 
 from catboost import CatBoostRegressor
@@ -21,43 +21,61 @@ import joblib
 
 
 
-class di_f_experiment():
+class Di_F_Experiment():  # Main class for all the experiments definitions
     def __init__(self, id: str, cfg: DictConfig):
-        self.id = id  #id = client.project.experiment
-        self.cfg = cfg  #config.yaml file 
-        self.dataPipeline: Pipeline
-        self.model: Pipeline
+        self.id: str = id  # id = client.project.experiment
+        self.cfg: DictConfig = cfg  # config.yaml file 
+        self.dataPipeline: Pipeline = None
+        self.model: Pipeline = None
   
-    def load_dataPipeline(self):
+    def load_dataPipeline(self) -> None:  # this method loads the dataPipeline model that was created/saved in runDataPipeline()
         try:
             self.dataPipeline = joblib.load(os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.datapipeline))
             print("datapipeline loaded successfully!")
         except Exception as e:
             print(f"Error loading the datapipeline: {e}")
         
-    def save_dataPipeline(self):
+    def save_dataPipeline(self) -> None:  # this method saves the dataPipeline model
         try:
             joblib.dump(self.dataPipeline, os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.datapipeline))
             print("Datapipeline saved successfully!")
         except Exception as e:
             print(f"Error saving the datapipeline: {e}")
         
-    def load_model(self):
+    def load_model(self) -> None:  # this method loads the model prediction that was created/saved in fits methods
         try:
             self.model = joblib.load(os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model))
             print("model loaded successfully!")
         except Exception as e:
             print(f"Error loading the model: {e}")
     
-    def save_model(self):
+    def save_model(self) -> None:  # this method saves the model prediction
         try:
             joblib.dump(self.model, os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model))
             print("model saved successfully!")
         except Exception as e:
             print(f"Error saving the model: {e}")
         
-    def makeDataPipeline(self):
-        def transform_data(data: pd.DataFrame)-> pd.DataFrame:
+    def runDataPipeline(self) -> None:  # this method runs the dataPipeline object-class
+        pass
+
+    def fit(self, score: dict) -> dict:  # this methods train the model prediction defined.
+        pass
+
+    def fit_Kfold(self,  score: dict, kfold_dict: dict = {'n_splits': 5, 'shuffle': True, 'random_state': 123},) -> dict:  # this method use Crossvalidations in trainning
+        pass
+
+    def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
+        pass
+   
+    
+class Di_F_Experiment_Regressor(Di_F_Experiment):
+    def __init__(self, id: str, cfg: DictConfig):
+        super().__init__(id, cfg)
+   
+    def runDataPipeline(self) -> None:  # this method runs the dataPipeline object-class
+        
+        def transform_data(data: pd.DataFrame) -> pd.DataFrame:
             """
             to transform data using a sklearn pipeline technology 
             data is the whole dataset, fetures + label
@@ -68,7 +86,7 @@ class di_f_experiment():
             labels = data[self.cfg.data_fields.label]
             dpl.fit(data[self.cfg.data_fields.features], labels)  # only fitting features, no label
             df = dpl.transform(data[self.cfg.data_fields.features])  # transformations is making on features
-            print(df.describe())
+            #print(df.describe())
 
             print(f'       After transformation: (rows,cols) {df.shape}')
             df[self.cfg.data_fields.label] = labels  # adding column labels to dataframe
@@ -108,7 +126,7 @@ class di_f_experiment():
         # save data pipeline model
         self.save_dataPipeline()
 
-    def fit(self, score: dict) -> dict:
+    def fit(self, score: dict) -> dict:  # this methods train the model prediction defined.
         # Load the data
         train_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir,
                                                   self.cfg.file_names.train_features))
@@ -148,7 +166,7 @@ class di_f_experiment():
         
         return {'id': score['id'], 'result': sc}
 
-    def fit_Kfold(self,  score: dict, kfold_dict: dict = {'n_splits': 5, 'shuffle': True, 'random_state': 123},) -> dict:
+    def fit_Kfold(self,  score: dict, kfold_dict: dict = {'n_splits': 5, 'shuffle': True, 'random_state': 123},) -> dict:  # this method use Crossvalidations in trainning
         # Load the data
         train_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir,
                                                   self.cfg.file_names.train_features))
@@ -203,20 +221,19 @@ class di_f_experiment():
         
         return {'id': score['id'], 'result': np.mean(scores)}
 
-    def predict(self, X: pd.DataFrame):
-        print(X.head(), X.dtypes)
+    def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
+        #print(X.head(), X.dtypes)
         self.load_dataPipeline()
         self.load_model()
         
         X_transformed = self.dataPipeline.transform(X)
-        print(X_transformed)
+        #print(X_transformed)
         result = self.model.predict(X_transformed)
         print(result)
-    
-class di_f_experiment_regressor(di_f_experiment):
+      
     
 
-class AnyExperiment(di_f_experiment):
+class Metaclass(Di_F_Experiment): #for susing templates
     def __init__(self, id, cfg):
         super().__init__(id, cfg)
         self.dataPipeline = Pipeline(

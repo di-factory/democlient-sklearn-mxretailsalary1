@@ -5,6 +5,11 @@ general_ml:
   encoding: iso-8859-1 #used for open files with specific encodind
   cloud: AWS
 
+  client: democlient
+  project: sklearn
+  experiment: mxreatilsalary1
+  
+
 paths:
   project_dir: /home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1 #project directory in this instance
   
