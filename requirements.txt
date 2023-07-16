@@ -13,6 +13,7 @@ coverage
 flake8
 hydra-core
 flassger
+streamlit
 
 # local package
 -e .

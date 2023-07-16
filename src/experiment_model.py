@@ -16,8 +16,8 @@ import pandas as pd
 
 
 class MxRetailSalary1(Di_F_Experiment_Regressor):
-    def __init__(self, id, cfg):
-        super().__init__(id, cfg)
+    def __init__(self, cfg):
+        super().__init__(cfg)
         
         # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)
         self.dataPipeline = Pipeline(   
@@ -107,8 +107,8 @@ class MxRetailSalary1(Di_F_Experiment_Regressor):
     def runDataPipeline(self):
         super().runDataPipeline()
             
-    def fit(self, score: dict) -> dict:
-        super().fit(score)
+    def fit(self, score: dict, tracking: bool) -> dict:
+        super().fit(score, tracking)
 
     def predict(self, X: pd.DataFrame):
-        super().predict(X)
+        return super().predict(X)
