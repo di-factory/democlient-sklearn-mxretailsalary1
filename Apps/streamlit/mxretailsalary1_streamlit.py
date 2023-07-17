@@ -1,15 +1,11 @@
 # streamlit app for running model predictions
-from hydra import compose, initialize
-from omegaconf import DictConfig
-from src.experiment_model import MxRetailSalary1
 
 import pandas as pd
 import streamlit as st
 import joblib
-import os
 
 
-def load_pred():
+def load_pred():  # Local function to retrieve prediction model for this Streamlit App
     experiment = None
     try:
         experiment = joblib.load('Apps/streamlit/streamlit_predict.pkl')
@@ -18,7 +14,6 @@ def load_pred():
         print(f"Error loading the predict model: run first save_streamlit_model.py: {e}")
     
     return experiment
-
 
 
 def main(experiment):    

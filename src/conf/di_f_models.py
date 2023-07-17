@@ -21,8 +21,7 @@ import joblib
 
 import mlflow
 import mlflow.sklearn
-from mlflow.models.signature import infer_signature
-
+#from mlflow.models.signature import infer_signature
 
 
 class Di_F_Experiment():  # Main class for all the experiments definitions
@@ -41,6 +40,7 @@ class Di_F_Experiment():  # Main class for all the experiments definitions
         self.cfg: DictConfig = cfg  # config.yaml file 
         self.dataPipeline: Pipeline = None
         self.model: Pipeline = None
+        self.features = self.cfg.data_fields.features
   
     def load_dataPipeline(self) -> None:  # this method loads the dataPipeline model that was created/saved in runDataPipeline()
         try:
@@ -82,15 +82,15 @@ class Di_F_Experiment():  # Main class for all the experiments definitions
 
     def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
         pass
-   
-    
+
+
 class Di_F_Experiment_Regressor(Di_F_Experiment):
     def __init__(self, cfg: DictConfig):
         super().__init__(cfg)
         self.di_f_exp = 'VotingRegressor'
-   
+
     def runDataPipeline(self) -> None:  # this method runs the dataPipeline object-class
-        
+
         def transform_data(data: pd.DataFrame) -> pd.DataFrame:
             """
             to transform data using a sklearn pipeline technology 
@@ -107,18 +107,19 @@ class Di_F_Experiment_Regressor(Di_F_Experiment):
             print(f'       After transformation: (rows,cols) {df.shape}')
             df[self.cfg.data_fields.label] = labels  # adding column labels to dataframe
             return df
-        
+
         # loading pre-processed data from notebook data profiling
         pathfile_l = os.path.join(self.cfg.paths.processed_data_dir, self.cfg.file_names.processed_data)
         data = ml_util.load_data(pathfile_l, 
-                     #encoding=<particular encoding> 
-                     )
+                                 # encoding=<particular encoding>
+                                 )
+
         # setting the directory where to save transformed data
         pathfile_s = os.path.join(self.cfg.paths.interim_data_dir, self.cfg.file_names.data_file)
-        
+
         # executing transformation
         data = transform_data(data=data)
-    
+
         # write the whole transformed data
         ml_util.write_transformed(pathfile_s, data)
 
@@ -275,10 +276,9 @@ class Di_F_Experiment_Regressor(Di_F_Experiment):
         result = self.model.predict(X_transformed)
         print(result)
         return np.array(result)
-      
-    
 
-class Metaclass(Di_F_Experiment): #for susing templates
+
+class Metaclass(Di_F_Experiment):  # for using templates
     def __init__(self, id, cfg):
         super().__init__(id, cfg)
         self.dataPipeline = Pipeline(
@@ -404,7 +404,3 @@ class Metaclass(Di_F_Experiment): #for susing templates
 
     def predict(self, X: pd.DataFrame):
         super().predict(X)
-
-
-
-

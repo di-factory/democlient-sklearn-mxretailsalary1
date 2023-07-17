@@ -17,17 +17,19 @@ def main(cfg: DictConfig) -> None:
     
     input = pd.DataFrame([['Oaxaca', 6021.07, 4],
                           ['Yucatan',34599.0, 4]], 
-                         columns=['state', 'income_employee_day', 'employees_business']
+                         columns=experiment.features]
                          )
     #print(input)
     
+    print('just dummy data:')
     experiment.predict(input)   
     
     try:
         joblib.dump(experiment, os.path.join(cfg.paths.streamlit_app_dir, cfg.file_names.streamlit_predict_model))
-        print("Datapipeline saved successfully!")
+        print("Streamlit predict model saved successfully!")
     except Exception as e:
-        print(f"Error saving the datapipeline: {e}")    
+        print(f"Error saving the Streamlit predict model: {e}")    
+    
 
 if __name__ == "__main__":
     main()

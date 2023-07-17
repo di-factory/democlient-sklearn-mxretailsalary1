@@ -1,29 +1,39 @@
+# API on Flask of the ML Model
 # -*- coding: utf-8 -*-
 
 from flask import Flask, request
 import pandas as pd
-import numpy as np
-from pycaret.regression import load_model, predict_model
 from pydantic import BaseModel
-import flasgger
 from flasgger import Swagger
+import joblib
 
 # run app
 app = Flask(__name__)
 Swagger(app)
 
-# Load trained Pipeline
-model = load_model("/home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1/API_Flask/API_Flask_model")
+
+def load_pred():  # Local function to retrieve prediction model for this API
+    experiment = None
+    try:
+        experiment = joblib.load('APIs/API_Flask/apiflask_predict.pkl')
+        print("API flask predict model loaded successfully!")
+    except Exception as e:
+        print(f"Error loading the predict model: run first save_apiflask_model.py: {e}")
+    
+    return experiment
+
 
 # Create input/output pydantic models
 class InputFields(BaseModel):
     state: str = 'Veracruz'
     income_employee_day: float = 1614.612060546875
-    employees_business:int = 5
+    employees_business: int = 5
+
 
 @app.route('/')
 def welcome():
     return "wellcome"
+
 
 # Define predict function
 @app.route("/predict", methods=['POST'])
@@ -63,13 +73,12 @@ def predict():
               description: Predicted value
     """
 
+    experiment = load_pred()
     data = request.json
-    print(data)
-    input_data = InputFields(**data) #validate and parse
-    data = pd.DataFrame([input_data.dict()]) #convert validated data
-    print(data)
-    predictions = predict_model(model, data=data)
-    return {"prediction": predictions["prediction_label"].iloc[0]}
+    input_data = InputFields(**data)  # validate and parse
+    data = pd.DataFrame([input_data.dict()], columns=['state', 'income_employee_day', 'employees_business'])  # convert validated data
+    predictions = experiment.predict(data)
+    return {"prediction": predictions[0]}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

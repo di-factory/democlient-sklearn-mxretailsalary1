@@ -22,9 +22,9 @@ paths:
   reports_dir: ${paths.project_dir}/reports #reports directory from all the project
   models_dir: ${paths.project_dir}/models #where models are saved in different parts of pipeline
   
-  api_pycaret_dir: ${paths.project_dir}/API/API_Pycaret #where pycaret saves create_api function (notebook)
-  api_fastapi_dir: ${paths.project_dir}/API/API_FastAPI #where API with Fastapi template resides
-  api_flask_dir: ${paths.project_dir}/API/API_Flask #where API with Flask template resides
+  api_pycaret_dir: ${paths.project_dir}/APIs/API_Pycaret #where pycaret saves create_api function (notebook)
+  api_fastapi_dir: ${paths.project_dir}/APIs/FastAPI #where API with Fastapi template resides
+  api_flask_dir: ${paths.project_dir}/APIs/API_Flask #where API with Flask template resides
 
   streamlit_app_dir: ${paths.project_dir}/Apps/streamlit
 
@@ -51,7 +51,10 @@ file_names:
   model: model.pkl
 
   streamlit_predict_model: streamlit_predict.pkl
+  fastapi_predict_model: fastapi_predict.pkl
+  apiflask_predict_model: apiflask_predict.pkl
   
+
 cloud_paths:
   bucket_path: dif-b-democlient-sklearn
   experiment_path: ${cloud_paths.bucket_path}/mxretailsalary1
@@ -67,7 +70,6 @@ data_fields:
              'employees_business',
             ]
   label: salary_employee_day
-  
   
 
 data_pipeline:
