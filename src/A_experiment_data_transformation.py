@@ -14,5 +14,6 @@ def main(cfg: DictConfig) -> None:
     experiment.runDataPipeline()    
     print(f'transformation concluded')
 
+
 if __name__ == "__main__":
     main()

@@ -76,7 +76,7 @@ def predict():
     experiment = load_pred()
     data = request.json
     input_data = InputFields(**data)  # validate and parse
-    data = pd.DataFrame([input_data.dict()], columns=['state', 'income_employee_day', 'employees_business'])  # convert validated data
+    data = pd.DataFrame([input_data.dict()], columns= experiment.cfg.data_fields.features)  # convert validated data
     predictions = experiment.predict(data)
     return {"prediction": predictions[0]}
 

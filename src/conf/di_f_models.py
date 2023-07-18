@@ -4,7 +4,7 @@ from omegaconf import DictConfig
 from sklearn.ensemble import GradientBoostingRegressor, VotingRegressor
 from sklearn.linear_model import HuberRegressor, BayesianRidge, Ridge
 
-#from pycaret.internal.pipeline import Pipeline
+from pycaret.internal.pipeline import Pipeline
 from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardScaler, SimpleImputer 
 from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder, MinMaxScaler
 
@@ -21,26 +21,37 @@ import joblib
 
 import mlflow
 import mlflow.sklearn
+
+
+from pydantic import BaseModel
+
+
 #from mlflow.models.signature import infer_signature
 
 
-class Di_F_Experiment():  # Main class for all the experiments definitions
-    
+class Di_F_Experiment:  # Main class for all the experiments definitions
+
     class Di_F_Experiment_score():
         def __init__(self, score: dict):
             self.id = score['id']
             self.metric = score['metric']
     
+    class Features(BaseModel):
+        pass
+    
         def __repr__(self):
             return {'id': self.id, 'metric': self.metric}
 
     def __init__(self, cfg: DictConfig):
-        self.id: str = cfg.general_ml.experiment  # id = client.project.experiment
         self.di_f_exp: str  # class of the experiment 
         self.cfg: DictConfig = cfg  # config.yaml file 
-        self.dataPipeline: Pipeline = None
-        self.model: Pipeline = None
-        self.features = self.cfg.data_fields.features
+        
+        self.id: str = self.cfg.general_ml.experiment  # id = client.project.experiment
+        self.features: self.Features = self.cfg.data_fields.features  # Features in config.yaml file
+        
+        self.dataPipeline: Pipeline = None  # Data Pipeline
+        self.model: Pipeline = None  # ML Pipeline
+
   
     def load_dataPipeline(self) -> None:  # this method loads the dataPipeline model that was created/saved in runDataPipeline()
         try:

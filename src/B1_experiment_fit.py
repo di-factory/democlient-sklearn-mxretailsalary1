@@ -6,7 +6,6 @@ from src.experiment_model import MxRetailSalary1
 from sklearn.metrics import r2_score
 
 
-
 @hydra.main(version_base=None, config_path="./conf", config_name="config")
 def main(cfg: DictConfig) -> None:
 

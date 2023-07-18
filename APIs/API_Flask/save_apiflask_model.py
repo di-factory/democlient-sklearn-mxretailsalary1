@@ -13,8 +13,8 @@ def main(cfg: DictConfig) -> None:
     
     experiment = MxRetailSalary1(cfg)
     input = pd.DataFrame([['Oaxaca', 6021.07, 4],
-                          ['Yucatan',34599.0, 4]], 
-                         columns=['state', 'income_employee_day', 'employees_business']
+                          ['Yucatan', 34599.0, 4]], 
+                         columns=experiment.cfg.data_fields.features
                          )
     
     print('just dummy data:')

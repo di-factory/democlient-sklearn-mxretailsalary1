@@ -13,9 +13,18 @@ import src.conf.preprocessors as pp
 
 from catboost import CatBoostRegressor
 import pandas as pd
+from pydantic import BaseModel
 
 
 class MxRetailSalary1(Di_F_Experiment_Regressor):
+    class Features(BaseModel):
+        state: str  # state of mexican republic 
+        income_employee_day: float
+        employees_business: str
+        
+    class Labels(BaseModel):
+        salary_employee_day: float
+        
     def __init__(self, cfg):
         super().__init__(cfg)
         

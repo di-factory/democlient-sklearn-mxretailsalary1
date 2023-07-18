@@ -41,7 +41,7 @@ def welcome():
 def predict(data: InputFields):
     experiment = load_pred()
 
-    input = pd.DataFrame([data.dict()], columns=['state', 'income_employee_day', 'employees_business'])
+    input = pd.DataFrame([data.dict()], columns= experiment.cfg.data_fields.features)
     predictions = experiment.predict(input)  
     return {"prediction": predictions[0]}
 
