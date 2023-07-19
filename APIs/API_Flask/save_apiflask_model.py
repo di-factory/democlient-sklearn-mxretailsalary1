@@ -5,6 +5,7 @@ from omegaconf import DictConfig
 from src.experiment_model import MxRetailSalary1
 import pandas as pd
 import joblib
+import pydantic
 import os
 
 
@@ -14,7 +15,7 @@ def main(cfg: DictConfig) -> None:
     experiment = MxRetailSalary1(cfg)
     input = pd.DataFrame([['Oaxaca', 6021.07, 4],
                           ['Yucatan', 34599.0, 4]], 
-                         columns=experiment.cfg.data_fields.features
+                         columns=experiment.feature_list
                          )
     
     print('just dummy data:')

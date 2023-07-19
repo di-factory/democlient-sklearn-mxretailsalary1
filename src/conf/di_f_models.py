@@ -23,11 +23,9 @@ import mlflow
 import mlflow.sklearn
 
 
-from pydantic import BaseModel
-
+from pydantic import BaseModel, create_model
 
 #from mlflow.models.signature import infer_signature
-
 
 class Di_F_Experiment:  # Main class for all the experiments definitions
 
@@ -36,18 +34,25 @@ class Di_F_Experiment:  # Main class for all the experiments definitions
             self.id = score['id']
             self.metric = score['metric']
     
-    class Features(BaseModel):
+    class Features(BaseModel):     
         pass
-    
+       
         def __repr__(self):
             return {'id': self.id, 'metric': self.metric}
 
     def __init__(self, cfg: DictConfig):
+        #def create_Features() -> DictConfig:
+        #    fields_dict = {}
+        #    for record in self.cfg.data_fields.features:
+        #        fields_dict[record.field] = (eval(record.type), record.default)
+        #    return create_model('Features', **fields_dict)  # This retrurn a class  
+        
         self.di_f_exp: str  # class of the experiment 
         self.cfg: DictConfig = cfg  # config.yaml file 
         
         self.id: str = self.cfg.general_ml.experiment  # id = client.project.experiment
-        self.features: self.Features = self.cfg.data_fields.features  # Features in config.yaml file
+        self.features: self.Features #= create_Features()()  # Features as instance of BaseModel by create_features
+        self.feature_list = [r.field for r in self.cfg.data_fields.features]
         
         self.dataPipeline: Pipeline = None  # Data Pipeline
         self.model: Pipeline = None  # ML Pipeline
@@ -96,6 +101,7 @@ class Di_F_Experiment:  # Main class for all the experiments definitions
 
 
 class Di_F_Experiment_Regressor(Di_F_Experiment):
+   
     def __init__(self, cfg: DictConfig):
         super().__init__(cfg)
         self.di_f_exp = 'VotingRegressor'
@@ -111,8 +117,8 @@ class Di_F_Experiment_Regressor(Di_F_Experiment):
    
             dpl = self.dataPipeline  # instanciating dataPipeline object
             labels = data[self.cfg.data_fields.label]
-            dpl.fit(data[self.cfg.data_fields.features], labels)  # only fitting features, no label
-            df = dpl.transform(data[self.cfg.data_fields.features])  # transformations is making on features
+            dpl.fit(data[self.feature_list], labels)  # only fitting features, no label
+            df = dpl.transform(data[self.feature_list])  # transformations is making on features
             #print(df.describe())
 
             print(f'       After transformation: (rows,cols) {df.shape}')

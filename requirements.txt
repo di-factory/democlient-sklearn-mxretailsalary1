@@ -14,6 +14,7 @@ flake8
 hydra-core
 flassger
 streamlit
+flask[async]
 
 # local package
 -e .

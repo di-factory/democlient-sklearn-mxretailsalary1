@@ -65,11 +65,19 @@ cloud_paths:
 
 data_fields:
   description: About what is the dataset
-  features:  # Here goes the data fields of the model
-    - state #state of mexican republic 
-    - income_employee_day #
-    - employees_business
-            
+
+  features:
+    - field: state
+      type: str
+      default: 'Hidalgo'
+    - field: income_employee_day
+      type: float
+      default: 4000.00
+    - field: employees_business
+      type: int
+      default: 6
+
+
   label: 
     salary_employee_day
 

@@ -8,7 +8,7 @@ from pycaret.internal.pipeline import Pipeline
 from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardScaler, SimpleImputer 
 from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder, MinMaxScaler
 
-from src.conf.di_f_models import Di_F_Experiment_Regressor
+from src.conf.di_f_models import Di_F_Experiment_Regressor, Di_F_Experiment
 import src.conf.preprocessors as pp
 
 from catboost import CatBoostRegressor
@@ -18,15 +18,15 @@ from pydantic import BaseModel
 
 class MxRetailSalary1(Di_F_Experiment_Regressor):
     class Features(BaseModel):
-        state: str  # state of mexican republic 
-        income_employee_day: float
-        employees_business: str
-        
-    class Labels(BaseModel):
-        salary_employee_day: float
-        
+        state: str= 'Hidalgo'
+        income_employee_day: float= 4000.00
+        employees_business: int= 6  
+    
     def __init__(self, cfg):
+
+            
         super().__init__(cfg)
+        #self.features = Features()
         
         # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)
         self.dataPipeline = Pipeline(   

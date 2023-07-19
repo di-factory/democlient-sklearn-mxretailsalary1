@@ -6,6 +6,7 @@ import pandas as pd
 from pydantic import BaseModel
 from flasgger import Swagger
 import joblib
+from src.experiment_model import MxRetailSalary1
 
 # run app
 app = Flask(__name__)
@@ -23,32 +24,33 @@ def load_pred():  # Local function to retrieve prediction model for this API
     return experiment
 
 
-# Create input/output pydantic models
-class InputFields(BaseModel):
-    state: str = 'Veracruz'
-    income_employee_day: float = 1614.612060546875
-    employees_business: int = 5
 
-
-@app.route('/')
-def welcome():
-    return "wellcome"
+@app.route("/any", methods=['GET'])
+async def welcome():
+    
+    """
+    Welcome message
+    ---
+    responses:
+      200:
+        description: Welcome message
+    """
+    return {"mess": "welcome"}
 
 
 # Define predict function
 @app.route("/predict", methods=['POST'])
-def predict():
+async def predict():
 
     """
-    Endpoint to predict the target variable using the input data.
-
+    Endpoint to predict the target variable using the input data
     ---
     parameters:
       - name: body
         in: body
         required: true
         schema:
-          id: InputFields
+          id: MxRetailSalary1.Features
           properties:
             state:
               type: string
@@ -75,8 +77,8 @@ def predict():
 
     experiment = load_pred()
     data = request.json
-    input_data = InputFields(**data)  # validate and parse
-    data = pd.DataFrame([input_data.dict()], columns= experiment.cfg.data_fields.features)  # convert validated data
+    input_data = MxRetailSalary1.Features(**data)  # validate and parse
+    data = pd.DataFrame([input_data.dict()], columns= experiment.feature_list)  # convert validated data
     predictions = experiment.predict(data)
     return {"prediction": predictions[0]}
 

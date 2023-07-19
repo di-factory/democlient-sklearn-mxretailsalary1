@@ -12,7 +12,7 @@ def main(cfg: DictConfig) -> None:
     
     dummy_input = pd.DataFrame([['Oaxaca', 6021.07, 4],
                           ['Yucatan',34599.0, 4]], 
-                         columns=experiment.features)    
+                         columns=experiment.feature_list)    
     print('just dummy data:')
     experiment.predict(dummy_input)   
 

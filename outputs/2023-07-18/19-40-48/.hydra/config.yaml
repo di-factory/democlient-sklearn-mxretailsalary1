@@ -1,0 +1,84 @@
+general_ml:
+  seed: 123
+  encoding: iso-8859-1
+  cloud: AWS
+  client: democlient
+  project: sklearn
+  experiment: mxreatilsalary1
+  tracking_on: false
+paths:
+  project_dir: /home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1
+  raw_data_dir: ${paths.project_dir}/data/raw
+  processed_data_dir: ${paths.project_dir}/data/processed
+  interim_data_dir: ${paths.project_dir}/data/interim
+  reports_dir: ${paths.project_dir}/reports
+  models_dir: ${paths.project_dir}/models
+  api_pycaret_dir: ${paths.project_dir}/APIs/API_Pycaret
+  api_fastapi_dir: ${paths.project_dir}/APIs/FastAPI
+  api_flask_dir: ${paths.project_dir}/APIs/API_Flask
+  streamlit_app_dir: ${paths.project_dir}/Apps/streamlit
+file_names:
+  raw_file: raw-data.csv
+  processed_data: processed_data.csv
+  processed_unseen_data: processed_unseen_data.csv
+  data_file: datafile.csv
+  train_features: train_features.csv
+  train_labels: train_labels.csv
+  validation_features: valid_features.csv
+  validation_labels: valid_labels.csv
+  test_features: test_features.csv
+  test_labels: test_labels.csv
+  data_profiling_report: data_profiling_report.html
+  ml_profiling_best: ml_profiling_best
+  api_ml_profiling: ml_profiling_best_API
+  datapipeline: datapipeline.pkl
+  model: model.pkl
+  streamlit_predict_model: streamlit_predict.pkl
+  fastapi_predict_model: fastapi_predict.pkl
+  apiflask_predict_model: apiflask_predict.pkl
+cloud_paths:
+  bucket_path: dif-b-democlient-sklearn
+  experiment_path: ${cloud_paths.bucket_path}/mxretailsalary1
+  mlflow_path: ${cloud_paths.experiment_path}/mlflow
+  reports_path: ${cloud_paths.experiment_path}/reports
+  rawdata_path: ${cloud_paths.experiment_path}/raw-data
+  dvc_path: ${cloud_paths.experiment_path}/dvc-store
+data_fields:
+  description: About what is the dataset
+  features:
+  - state
+  - income_employee_day
+  - employees_business
+  f2:
+  - - field: state
+    - type: str
+  - - field: income_employee_day
+    - type: float
+  - - field: employees_business
+    - type: int
+  label: salary_employee_day
+data_pipeline:
+  drop_features: []
+  keep_features: []
+  standarize_text: []
+  str_to_float: []
+  to_categorize: []
+  category_to_num: []
+  onehot_encoding:
+  - state
+  numerical_vars_from_numerical:
+  - income
+  - mn_sat
+  - tuition
+  categorical_vars:
+  - undergra
+  - zipcode
+  categorical_label_extraction:
+  - zipcode
+  pipeline01: decisiontree
+  data_transform_params:
+    percent_valid: 0.2
+    percent_test: 0.1
+mlflow:
+  tracking_uri: http://3.138.151.210:5000
+  tracking_experiment_name: mxretailsalary1
