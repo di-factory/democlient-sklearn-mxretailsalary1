@@ -26,8 +26,8 @@ paths:
   api_fastapi_dir: ${paths.project_dir}/APIs/FastAPI #where API with Fastapi template resides
   api_flask_dir: ${paths.project_dir}/APIs/API_Flask #where API with Flask template resides
 
-  streamlit_app_dir: ${paths.project_dir}/Apps/streamlit
-
+  streamlit_app_dir: ${paths.project_dir}/Apps/Streamlit
+  flask_app_dir: ${paths.project_dir}/Apps/Flask
 
 file_names:
   raw_file : raw-data.csv #name of raw_data file
@@ -53,6 +53,7 @@ file_names:
   streamlit_predict_model: streamlit_predict.pkl
   fastapi_predict_model: fastapi_predict.pkl
   apiflask_predict_model: apiflask_predict.pkl
+  flask_predict_model: flask_predict.pkl
   
 
 cloud_paths:

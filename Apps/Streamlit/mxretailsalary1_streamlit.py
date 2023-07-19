@@ -8,7 +8,7 @@ import joblib
 def load_pred():  # Local function to retrieve prediction model for this Streamlit App
     experiment = None
     try:
-        experiment = joblib.load('Apps/streamlit/streamlit_predict.pkl')
+        experiment = joblib.load('Apps/Streamlit/streamlit_predict.pkl')
         print("streamlit predict model loaded successfully!")
     except Exception as e:
         print(f"Error loading the predict model: run first save_streamlit_model.py: {e}")
@@ -33,7 +33,7 @@ def main(experiment):
     if st.button("Predecir"):
         result = experiment.predict(
             pd.DataFrame([[state, income, employees]],
-                         columns=['state', 'income_employee_day', 'employees_business']
+                         columns=experiment.feature_list
                                     ))
     
     st.success(f'El salario (sin comisiones) es {result}')

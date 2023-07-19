@@ -2,21 +2,14 @@
 # -*- coding: utf-8 -*
 
 import pandas as pd
-from pycaret.regression import load_model, predict_model
 from fastapi import FastAPI
 import uvicorn
-from pydantic import BaseModel
 from src.experiment_model import MxRetailSalary1
+from pydantic import BaseModel
 import joblib
 
 # Create the app
 app = FastAPI()
-
-# Create input/output pydantic models
-class InputFields(BaseModel):
-    state: str = 'Veracruz'
-    income_employee_day: float = 1614.612060546875
-    employees_business: int = 5
 
 
 def load_pred():  # Local function to retrieve prediction model for this API
@@ -38,10 +31,10 @@ def welcome():
 
 
 @app.post("/predict")
-def predict(data: InputFields):
+def predict(data: MxRetailSalary1.Features):
     experiment = load_pred()
 
-    input = pd.DataFrame([data.dict()], columns= experiment.cfg.data_fields.features)
+    input = pd.DataFrame([data.dict()], columns= experiment.feature_list)
     predictions = experiment.predict(input)  
     return {"prediction": predictions[0]}
 

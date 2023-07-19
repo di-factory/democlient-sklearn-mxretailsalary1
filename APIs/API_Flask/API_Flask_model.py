@@ -76,7 +76,7 @@ async def predict():
     """
 
     experiment = load_pred()
-    data = request.json
+    data: MxRetailSalary1.Features = request.json
     input_data = MxRetailSalary1.Features(**data)  # validate and parse
     data = pd.DataFrame([input_data.dict()], columns= experiment.feature_list)  # convert validated data
     predictions = experiment.predict(data)
