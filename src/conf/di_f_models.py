@@ -25,8 +25,9 @@ from typing import List
 from pydantic import BaseModel, create_model
 
 
-#from mlflow.models.signature import infer_signature
+# from mlflow.models.signature import infer_signature
 
+# --------- LEVEL 0 -----------------
 class Di_FX:  # Main class for all the experiments definitions
     class Di_FX_score:  # To record the scores of each model
         def __init__(self, score: dict):
@@ -59,9 +60,10 @@ class Di_FX:  # Main class for all the experiments definitions
                     catalogue[record.field] = record.aList 
             return catalogue
         
-        self.di_f_exp: str  # class of the experiment 
-        self.cfg: DictConfig = cfg  # config.yaml file 
+        self.di_fx: List[str] = []
+        self.di_fx.append('Di_FX')  # Level 0 class of the experiment 
         
+        self.cfg: DictConfig = cfg  # config.yaml file 
         self.id: str = self.cfg.general_ml.experiment  # id = client.project.experiment
         self.features: self.Features  # create_Features()()  # Features as instance of BaseModel by create_features
         self.feature_list = [r.field for r in self.cfg.data_fields.features]
@@ -114,11 +116,11 @@ class Di_FX:  # Main class for all the experiments definitions
         pass
 
 
-class Di_FX_Regressor(Di_FX):
-   
+# --------- LEVEL 1 -----------------
+class Di_FX_ml(Di_FX):
     def __init__(self, cfg: DictConfig):
         super().__init__(cfg)
-        self.di_f_exp = 'VotingRegressor'
+        self.di_fx.append('ml')  # Level 1 class of the experiment 
 
     def runDataPipeline(self) -> None:  # this method runs the dataPipeline object-class
 
@@ -173,6 +175,30 @@ class Di_FX_Regressor(Di_FX):
         
         # save data pipeline model
         self.save_dataPipeline()
+
+    def fit(self, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
+        pass
+    
+    def fit_Kfold(self, tracking: bool = False) -> dict:  # this method use Crossvalidations in trainning
+        pass
+    
+    def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
+        #print(X.head(), X.dtypes)
+        self.load_dataPipeline()
+        self.load_model()
+        
+        X_transformed = self.dataPipeline.transform(X)
+        #print(X_transformed)
+        result = self.model.predict(X_transformed)
+        print(result)
+        return np.array(result)
+
+
+# --------- LEVEL 2 -----------------
+class Di_FX_Voting(Di_FX_ml):  
+    def __init__(self, cfg: DictConfig):
+        super().__init__(cfg)
+        self.di_fx.append('Voting')  # Level 2 class of the experiment 
 
     def fit(self, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
         # Load the data
@@ -304,15 +330,145 @@ class Di_FX_Regressor(Di_FX):
         return {'id': score['id'], 'result': np.mean(scores)}
 
     def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
-        #print(X.head(), X.dtypes)
-        self.load_dataPipeline()
-        self.load_model()
+        super().predict(X)
+
+
+class Di_FX_Regressor(Di_FX_ml):  
+    def __init__(self, cfg: DictConfig):
+        super().__init__(cfg)
+        self.di_fx.append('Regressor')  # Level 2 class of the experiment 
+
+    def fit(self, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
+        # Load the data
+        train_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir,
+                                                  self.cfg.file_names.train_features))
+        train_labels = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
+                                                self.cfg.file_names.train_labels))
+        validation_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
+                                                       self.cfg.file_names.validation_features))
+        validation_labels = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
+                                                     self.cfg.file_names.validation_labels))
+        test_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
+                                                 self.cfg.file_names.test_features))
+        test_labels = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
+                                               self.cfg.file_names.test_labels))
+
+        #creating datasets from concatenation of sources
+        #In this case as kfold, we need to concatenate the whole datasets
+        X_train = pd.concat([train_features, validation_features], ignore_index=True)
+        y_train = pd.concat([train_labels, validation_labels], ignore_index=True)
+
+        if tracking:
+            #setting up mlflow    
+            mlflow.set_tracking_uri(self.cfg.mlflow.tracking_uri)
+            mlflow.set_experiment(f'{self.cfg.mlflow.tracking_experiment_name}_{self.di_f_exp}')
+            mlflow.sklearn.autolog()
+            mlflow.start_run()
+
+        # Fit the model
+        print('fitting the  model')
+        print(f'dimensions: features-> {X_train.shape}, labels-> {y_train.shape}')
+   
+        self.model.fit(X_train, np.ravel(y_train))
+    
+        #calculating trainning score
+        y_pred = self.model.predict(X_train)
+        print('scores for trainning:')
+        for score in self.scores:
+            sc = score['metric'](y_train, y_pred)
+            print(f"train scoring {score['id']}: {sc}")
         
-        X_transformed = self.dataPipeline.transform(X)
-        #print(X_transformed)
-        result = self.model.predict(X_transformed)
-        print(result)
-        return np.array(result)
+
+        #calculating testing score
+        y_pred = self.model.predict(test_features)
+        print('scores for test:')
+        for score in self.scores:
+            sc = score['metric'](test_labels, y_pred)
+            print(f"test scoring {score['id']}: {sc}")
+        
+        # saving the model
+        self.save_model()
+        
+        if tracking:
+            # stoping mlflow run experiment
+            mlflow.end_run()
+        
+        return {'id': score['id'], 'result': sc}
+
+    def fit_Kfold(self, tracking: bool = False) -> dict:  # this method use Crossvalidations in trainning
+        # Load the data
+        train_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir,
+                                                  self.cfg.file_names.train_features))
+        train_labels = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
+                                                self.cfg.file_names.train_labels))
+        validation_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
+                                                       self.cfg.file_names.validation_features))
+        validation_labels = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
+                                                     self.cfg.file_names.validation_labels))
+        test_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
+                                                 self.cfg.file_names.test_features))
+        test_labels = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
+                                               self.cfg.file_names.test_labels))
+        
+        #creating the kfold
+        kfold = KFold(n_splits = kfold_dict['n_splits'], 
+                      shuffle = kfold_dict['shuffle'], 
+                      random_state=self.cfg.general_ml.seed
+                      )
+
+        #creating datasets from concatenation of sources
+        #In this case as kfold, we need to concatenate the whole datasets
+        whole_features = pd.concat([train_features, validation_features, test_features], ignore_index=True)
+        whole_labels = pd.concat([train_labels, validation_labels, test_labels], ignore_index=True)
+                       
+        if tracking:
+            #setting up mlflow    
+            mlflow.set_tracking_uri(self.cfg.mlflow.tracking_uri)
+            mlflow.set_experiment(f'{self.cfg.mlflow.tracking_experiment_name}_{self.di_f_exp}')
+            mlflow.sklearn.autolog()
+            mlflow.start_run()
+                     
+        #printing r2 sccore with cv=5
+        print('scores pre-Kfold:')
+        for score in self.scores:
+            sc = cross_val_score(self.model, whole_features, np.ravel(whole_labels), cv=5, scoring=score['id']).mean()
+            print(f"cross_val_scoring (before kfold){score['id']}: {sc}")
+
+        # Fit the model
+        print('fitting the  model')
+        print(f'dimensions: features-> {whole_features.shape}, labels-> {whole_labels.shape}')
+   
+        scores_v = {}
+    
+        for train_index, test_index in kfold.split(whole_features):
+           
+            X_train= np.array(whole_features)[train_index]
+            X_test = np.array(whole_features)[test_index]
+            y_train = np.array(whole_labels)[train_index]
+            y_test = np.array(whole_labels)[test_index]
+
+            self.model.fit(X_train, np.ravel(y_train))
+            y_pred = self.model.predict(X_test)
+
+            for score in self.scores:
+                sc = score['metric'](y_test, y_pred)
+                scores_v[score['id']]+=sc
+   
+        print('scores post-Kfold:')
+        for score in self.scores:
+            print(f"scoring after kfold {score['id']}: {scores_v[score['id']]/5}")
+        
+        # saving the model
+        self.save_model()
+        
+        if tracking:
+            # stoping mlflow run experiment
+            mlflow.end_run()
+        
+        return {'id': score['id'], 'result': np.mean(scores)}
+
+    def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
+        super().predict(X)
 
 
 class Metaclass(Di_FX):  # for using templates
