@@ -5,7 +5,6 @@ import pandas as pd
 from fastapi import FastAPI
 import uvicorn
 from src.experiment_model import MxRetailSalary1
-from pydantic import BaseModel
 import joblib
 
 # Create the app
@@ -34,7 +33,7 @@ def welcome():
 def predict(data: MxRetailSalary1.Features):
     experiment = load_pred()
 
-    input = pd.DataFrame([data.dict()], columns= experiment.feature_list)
+    input = pd.DataFrame([data.dict()], columns=experiment.feature_list)
     predictions = experiment.predict(input)  
     return {"prediction": predictions[0]}
 

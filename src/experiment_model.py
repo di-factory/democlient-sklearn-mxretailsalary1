@@ -8,25 +8,29 @@ from pycaret.internal.pipeline import Pipeline
 from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardScaler, SimpleImputer 
 from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder, MinMaxScaler
 
-from src.conf.di_f_models import Di_F_Experiment_Regressor, Di_F_Experiment
+from src.conf.di_f_models import Di_FX_Regressor, Di_FX
 import src.conf.preprocessors as pp
 
 from catboost import CatBoostRegressor
 import pandas as pd
 from pydantic import BaseModel
+from sklearn.metrics import r2_score, mean_absolute_percentage_error
 
 
-class MxRetailSalary1(Di_F_Experiment_Regressor):
-    class Features(BaseModel):
+class MxRetailSalary1(Di_FX_Regressor):
+    
+    class Features(BaseModel):  # Rewritting Features class to include the actual features
         state: str= 'Hidalgo'
         income_employee_day: float= 4000.00
         employees_business: int= 6  
     
     def __init__(self, cfg):
-
-            
         super().__init__(cfg)
-        #self.features = Features()
+        
+        self.scores = [{'id': 'mape', 'metric': mean_absolute_percentage_error},
+                       {'id': 'r2', 'metric': r2_score}]
+        
+        self.kfold = {'n_splits': 5, 'shuffle': True, 'random_state': self.cfg.general_ml.seed}
         
         # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)
         self.dataPipeline = Pipeline(   
@@ -116,8 +120,11 @@ class MxRetailSalary1(Di_F_Experiment_Regressor):
     def runDataPipeline(self):
         super().runDataPipeline()
             
-    def fit(self, score: dict, tracking: bool) -> dict:
-        super().fit(score, tracking)
+    def fit(self, tracking: bool) -> dict:
+        super().fit(tracking)
+
+    def fit_Kfold(self, tracking: bool = False) -> dict:
+        super().fit_Kfold(tracking)
 
     def predict(self, X: pd.DataFrame):
         return super().predict(X)

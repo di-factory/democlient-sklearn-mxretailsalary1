@@ -14,7 +14,7 @@ def main(cfg: DictConfig) -> None:
     
     input = pd.DataFrame([['Oaxaca', 6021.07, 4],
                           ['Yucatan',34599.0, 4]], 
-                         columns= experiment.feature_list
+                         columns=experiment.feature_list
                          )
     
     print('just dummy data:')

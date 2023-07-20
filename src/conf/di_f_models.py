@@ -21,42 +21,57 @@ import joblib
 
 import mlflow
 import mlflow.sklearn
-
-
+from typing import List
 from pydantic import BaseModel, create_model
+
 
 #from mlflow.models.signature import infer_signature
 
-class Di_F_Experiment:  # Main class for all the experiments definitions
-
-    class Di_F_Experiment_score():
+class Di_FX:  # Main class for all the experiments definitions
+    class Di_FX_score:  # To record the scores of each model
         def __init__(self, score: dict):
             self.id = score['id']
             self.metric = score['metric']
-    
-    class Features(BaseModel):     
+
+    class Di_FX_Kfold:  # To record the params of Kfolds
+        def __init__(self, kfold_dict: dict = {'n_splits': 5, 'shuffle': True, 'random_state': 123}):
+            self.n_splits = kfold_dict['n_splits']
+            self.shuffle = kfold_dict['shuffle']
+            self.random_state = kfold_dict['random_state']
+            
+    class Features(BaseModel):  # To represent the Features Set of the experiment
         pass
        
         def __repr__(self):
             return {'id': self.id, 'metric': self.metric}
 
     def __init__(self, cfg: DictConfig):
-        #def create_Features() -> DictConfig:
+        #def create_Features() -> DictConfig: # this codes keeps when  pkl can manage create_model from pydantic
         #    fields_dict = {}
         #    for record in self.cfg.data_fields.features:
         #        fields_dict[record.field] = (eval(record.type), record.default)
         #    return create_model('Features', **fields_dict)  # This retrurn a class  
         
+        def create_catalogues() -> dict:
+            catalogue = {}
+            for record in self.cfg.data_fields.features:
+                if hasattr(record, 'aList'):  # Looking for the field aList in each record
+                    catalogue[record.field] = record.aList 
+            return catalogue
+        
         self.di_f_exp: str  # class of the experiment 
         self.cfg: DictConfig = cfg  # config.yaml file 
         
         self.id: str = self.cfg.general_ml.experiment  # id = client.project.experiment
-        self.features: self.Features #= create_Features()()  # Features as instance of BaseModel by create_features
+        self.features: self.Features  # create_Features()()  # Features as instance of BaseModel by create_features
         self.feature_list = [r.field for r in self.cfg.data_fields.features]
         
         self.dataPipeline: Pipeline = None  # Data Pipeline
         self.model: Pipeline = None  # ML Pipeline
-
+        
+        self.catalogues: dict = create_catalogues()
+        self.scores: List[self.Di_FX_score] = None
+        self.kfold = self.Di_FX_Kfold()
   
     def load_dataPipeline(self) -> None:  # this method loads the dataPipeline model that was created/saved in runDataPipeline()
         try:
@@ -89,18 +104,17 @@ class Di_F_Experiment:  # Main class for all the experiments definitions
     def runDataPipeline(self) -> None:  # this method runs the dataPipeline object-class
         pass
 
-    def fit(self, score: Di_F_Experiment_score, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
+    def fit(self, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
         pass
 
-    def fit_Kfold(self,  score: Di_F_Experiment_score, 
-                  kfold_dict: dict = {'n_splits': 5, 'shuffle': True, 'random_state': 123},) -> dict:  # this method use Crossvalidations in trainning
+    def fit_Kfold(self) -> dict:  # this method use Crossvalidations in trainning
         pass
 
     def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
         pass
 
 
-class Di_F_Experiment_Regressor(Di_F_Experiment):
+class Di_FX_Regressor(Di_FX):
    
     def __init__(self, cfg: DictConfig):
         super().__init__(cfg)
@@ -160,7 +174,7 @@ class Di_F_Experiment_Regressor(Di_F_Experiment):
         # save data pipeline model
         self.save_dataPipeline()
 
-    def fit(self, score: Di_F_Experiment.Di_F_Experiment_score, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
+    def fit(self, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
         # Load the data
         train_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir,
                                                   self.cfg.file_names.train_features))
@@ -195,14 +209,18 @@ class Di_F_Experiment_Regressor(Di_F_Experiment):
     
         #calculating trainning score
         y_pred = self.model.predict(X_train)
-        sc = score['metric'](y_train, y_pred)
-        print(f'train scoring: {sc}')
+        print('scores for trainning:')
+        for score in self.scores:
+            sc = score['metric'](y_train, y_pred)
+            print(f"train scoring {score['id']}: {sc}")
         
 
         #calculating testing score
         y_pred = self.model.predict(test_features)
-        sc = score['metric'](test_labels, y_pred)
-        print(f'test scoring: {sc}')
+        print('scores for test:')
+        for score in self.scores:
+            sc = score['metric'](test_labels, y_pred)
+            print(f"test scoring {score['id']}: {sc}")
         
         # saving the model
         self.save_model()
@@ -213,9 +231,7 @@ class Di_F_Experiment_Regressor(Di_F_Experiment):
         
         return {'id': score['id'], 'result': sc}
 
-    def fit_Kfold(self,  score: Di_F_Experiment.Di_F_Experiment_score, 
-                  kfold_dict: dict = {'n_splits': 5, 'shuffle': True, 'random_state': 123},
-                  tracking: bool = False) -> dict:  # this method use Crossvalidations in trainning
+    def fit_Kfold(self, tracking: bool = False) -> dict:  # this method use Crossvalidations in trainning
         # Load the data
         train_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir,
                                                   self.cfg.file_names.train_features))
@@ -249,15 +265,16 @@ class Di_F_Experiment_Regressor(Di_F_Experiment):
             mlflow.start_run()
                      
         #printing r2 sccore with cv=5
-        sc = cross_val_score(self.model, whole_features, np.ravel(whole_labels), cv=5, scoring=score['id']).mean()
-        print(f'cross_val_scoring (before kfold): {sc}')
+        print('scores pre-Kfold:')
+        for score in self.scores:
+            sc = cross_val_score(self.model, whole_features, np.ravel(whole_labels), cv=5, scoring=score['id']).mean()
+            print(f"cross_val_scoring (before kfold){score['id']}: {sc}")
 
         # Fit the model
         print('fitting the  model')
         print(f'dimensions: features-> {whole_features.shape}, labels-> {whole_labels.shape}')
    
-        scores=[]
-
+        scores_v = {}
     
         for train_index, test_index in kfold.split(whole_features):
            
@@ -269,10 +286,13 @@ class Di_F_Experiment_Regressor(Di_F_Experiment):
             self.model.fit(X_train, np.ravel(y_train))
             y_pred = self.model.predict(X_test)
 
-            sc = score['metric'](y_test, y_pred)
-            scores.append(sc)
+            for score in self.scores:
+                sc = score['metric'](y_test, y_pred)
+                scores_v[score['id']]+=sc
    
-        print(f'scoring after kfold: {np.mean(scores)}')
+        print('scores post-Kfold:')
+        for score in self.scores:
+            print(f"scoring after kfold {score['id']}: {scores_v[score['id']]/5}")
         
         # saving the model
         self.save_model()
@@ -295,7 +315,7 @@ class Di_F_Experiment_Regressor(Di_F_Experiment):
         return np.array(result)
 
 
-class Metaclass(Di_F_Experiment):  # for using templates
+class Metaclass(Di_FX):  # for using templates
     def __init__(self, id, cfg):
         super().__init__(id, cfg)
         self.dataPipeline = Pipeline(

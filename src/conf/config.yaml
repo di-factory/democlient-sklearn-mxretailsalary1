@@ -71,6 +71,9 @@ data_fields:
     - field: state
       type: str
       default: 'Hidalgo'
+      aList: [Aguascalientes, BC, BCS, Campeche, Chiapas, Chihuahua, Coahuila, Colima, Durango, Guanajuato, Guerrero, Hidalgo, Jalisco,
+      Mexico, CDMX, Michoacan, Morelos, Nayarit, Nuevo Leon, Oaxaca, Puebla, Queretaro, Quintana Roo, SLP, Sinaloa, Sonora, Tabasco, Tamaulipas,
+      Tlaxcala, Veracruz, Yucatan, Zacatecas]
     - field: income_employee_day
       type: float
       default: 4000.00

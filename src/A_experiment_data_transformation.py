@@ -12,8 +12,7 @@ def main(cfg: DictConfig) -> None:
     experiment.runDataPipeline()    
     print(f'transformation concluded')
     
-    print(experiment.Features().dict())
-    print(experiment.feature_list)
+    print(experiment.catalogues)
     
     
 if __name__ == "__main__":

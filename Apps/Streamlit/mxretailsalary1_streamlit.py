@@ -23,10 +23,10 @@ def main(experiment):
     <h2 style="color:white;text-align:center;">Streamlit Salary Retail Estimator ML App</h2>
     </div>
     """
-    st.markdown(html_temp, unsafe_allow_html = True)
-    state = st.text_input("Estado Mx")
-    income = st.number_input(label="Ventas diarias estimadas", min_value= 4000, step = 100)
-    employees = st.slider("Empleados en el local", min_value=4, max_value=8, step = 1, format='%d')
+    st.markdown(html_temp, unsafe_allow_html=True)
+    state = st.selectbox("Estado Mx", experiment.catalogues['state'])
+    income = st.number_input(label="Ventas diarias estimadas", min_value=4000, step=100)
+    employees = st.slider("Empleados en el local", min_value=4, max_value=8, step=1, format='%d')
     
     result = 0.0
     
@@ -34,7 +34,7 @@ def main(experiment):
         result = experiment.predict(
             pd.DataFrame([[state, income, employees]],
                          columns=experiment.feature_list
-                                    ))
+                         ))
     
     st.success(f'El salario (sin comisiones) es {result}')
     

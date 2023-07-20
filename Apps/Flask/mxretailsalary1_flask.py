@@ -28,7 +28,7 @@ def main():
         input_data = pd.DataFrame([[state, income, employees]], columns=experiment.feature_list)
         result = experiment.predict(input_data)[0]
     
-    return render_template('index.html', result=result)
+    return render_template('index2.html', result=result)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

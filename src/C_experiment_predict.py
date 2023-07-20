@@ -11,10 +11,11 @@ def main(cfg: DictConfig) -> None:
     experiment = MxRetailSalary1(cfg)
     
     dummy_input = pd.DataFrame([['Oaxaca', 6021.07, 4],
-                          ['Yucatan',34599.0, 4]], 
+                          ['Yucatan', 34599.0, 4]], 
                          columns=experiment.feature_list)    
     print('just dummy data:')
     experiment.predict(dummy_input)   
+
 
 if __name__ == "__main__":
     main()

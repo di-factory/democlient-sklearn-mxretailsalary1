@@ -5,7 +5,6 @@ from omegaconf import DictConfig
 from src.experiment_model import MxRetailSalary1
 import pandas as pd
 import joblib
-import pydantic
 import os
 
 
