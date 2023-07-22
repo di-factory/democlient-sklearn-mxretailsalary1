@@ -5,6 +5,7 @@ from omegaconf import DictConfig
 import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
+import torch
 #from src.conf.pipeline import datapipeline, datapipeline2, datapipeline3, datapipeline4
 
 
@@ -79,3 +80,27 @@ def write_spplited(pathfile_train_futures: os.path,
     print(f'                             {pathfile_test_futures}')
     print(f'                             {pathfile_test_labels}')
 
+
+
+def minmax(values):  # This util, transform columns of a matrix between min-max and returns also the min/max values used in each column 
+    minmax_cols = {} 
+    for col in range(values.shape[1]):
+        min_val = min(values[:,col])
+        max_val = max(values[:,col])
+        values[:,col] = (values[:,col] - min_val) / (max_val - min_val)
+        minmax_cols[col]= {'min_val': min_val, 'max_val': max_val} 
+    return minmax_cols, values
+    
+        
+def normalize(values):  # This util, normalize columns of a matrix and returns also the mean/std values used in each column 
+    normalize_cols = {} 
+    for col in range(values.shape[1]):
+        mean = values[:,col].mean()
+        std = values[:,col].std()
+        values[:,col]  = (values[:,col]  - mean) / std 
+        normalize_cols[col]= {'mean': mean, 'max_val': std} 
+    return normalize_cols, values
+
+
+def logar(values):  
+    return torch.log(values)

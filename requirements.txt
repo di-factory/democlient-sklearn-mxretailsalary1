@@ -16,6 +16,11 @@ flassger
 streamlit
 flask[async]
 
+torch
+torchmetrics
+matplotlib
+seaborn
+
 # local package
 -e .
 
