@@ -9,26 +9,29 @@ import torch
 #from src.conf.pipeline import datapipeline, datapipeline2, datapipeline3, datapipeline4
 
 
-def load_data(pathfile: os.path, encoding:str='') -> pd.DataFrame:
+def load_data(pathfile: os.path, encoding:str='', verbose: bool = False) -> pd.DataFrame:
     """
     to load data from raw directory and return a dataframe
     """
-    print(f' STEP1: loading raw data...@ {pathfile}')
+    if verbose:
+        print(f' STEP1: loading raw data...@ {pathfile}')
     df = pd.read_csv(pathfile, encoding=encoding)
-    print(f'        Were loaded: (rows,cols) {df.shape}')
-    print( '------------------------------------------------------')
+    if verbose:
+        print(f'        Were loaded: (rows,cols) {df.shape}')
+        print( '------------------------------------------------------')
     return df
 
 
-def write_transformed(pathfile: os.path, data: pd.DataFrame)-> None:
+def write_transformed(pathfile: os.path, data: pd.DataFrame, verbose: bool = False)-> None:
      """
      saving transformed data in file
      """
+     
      data.to_csv(pathfile, index=False)
-     print(f'       Transformed data saved @ {pathfile}')
-     print( '------------------------------------------------------')
-     #print('\nDTYPES:\n',data.dtypes)
-     print( '------------------------------------------------------')
+     if verbose:
+        print(f'       Transformed data saved @ {pathfile}')
+        print( '------------------------------------------------------')
+        print( '------------------------------------------------------')
 
 
 def write_spplited(pathfile_train_futures: os.path,
@@ -41,7 +44,8 @@ def write_spplited(pathfile_train_futures: os.path,
                    label: str,
                    percent_valid: float,
                    percent_test: float,
-                   seed: int
+                   seed: int,
+                   verbose: bool = False
                    ) -> None:
     
     """
@@ -55,14 +59,16 @@ def write_spplited(pathfile_train_futures: os.path,
     """  
     
  
-    print(' STEP3: Sppliting Data')
+    if verbose:
+        print(' STEP3: Sppliting Data')
 
     df_train, df_test = train_test_split(data, test_size=percent_test, random_state=seed)
     df_train, df_validation = train_test_split(df_train, test_size= percent_valid, random_state=seed)
-   
-    print(f'       Once spplited: (rows,cols) in train set: {df_train.shape}') 
-    print(f'                                  in validation set; {df_validation.shape}')
-    print(f'                                  and in test set: {df_test.shape}')
+    
+    if verbose:
+        print(f'       Once spplited: (rows,cols) in train set: {df_train.shape}') 
+        print(f'                                  in validation set; {df_validation.shape}')
+        print(f'                                  and in test set: {df_test.shape}')
 
     df_train[label].to_csv(pathfile_train_labels, index=None)
     df_train.drop(str(label), axis=1).to_csv(pathfile_train_futures, index=None)
@@ -73,12 +79,13 @@ def write_spplited(pathfile_train_futures: os.path,
     df_test[label].to_csv(pathfile_test_labels, index=None)
     df_test.drop(str(label), axis=1).to_csv(pathfile_test_futures, index=None)
 
-    print(f'       Spplited data saved @ {pathfile_train_futures}')
-    print(f'                             {pathfile_train_labels}')
-    print(f'                             {pathfile_validation_futures}')
-    print(f'                             {pathfile_validation_labels}')
-    print(f'                             {pathfile_test_futures}')
-    print(f'                             {pathfile_test_labels}')
+    if verbose:
+        print(f'       Spplited data saved @ {pathfile_train_futures}')
+        print(f'                             {pathfile_train_labels}')
+        print(f'                             {pathfile_validation_futures}')
+        print(f'                             {pathfile_validation_labels}')
+        print(f'                             {pathfile_test_futures}')
+        print(f'                             {pathfile_test_labels}')
 
 
 # Transformers: 

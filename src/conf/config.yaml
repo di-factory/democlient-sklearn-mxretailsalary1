@@ -93,6 +93,7 @@ data_pipeline:
   to_categorize: []
   category_to_num: []
   onehot_encoding: ['state']
+  verbose: False
 
   #-----------------------------------------------
   # categorical variables to transform to numerical variables
@@ -102,13 +103,16 @@ data_pipeline:
   categorical_vars: ['undergra', 'zipcode']
   categorical_label_extraction: ['zipcode']
   
-  # specify the ml algo
-  pipeline01: decisiontree
   #--------------------------------
-
   data_transform_params:
     percent_valid: 0.20
     percent_test: 0.10
+
+    
+ml_pipeline:
+  model: tbd
+  verbose: False
+
 
 mlflow:
   tracking_uri: http://3.138.151.210:5000

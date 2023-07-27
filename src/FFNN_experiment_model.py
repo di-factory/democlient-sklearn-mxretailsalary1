@@ -37,8 +37,7 @@ class MxRetailSalary1(Di_F_Pipe_Regression_Pytorch_FFNN):
                        {'id': 'r2', 'metric': r2_score}]
         
         self.kfold = {'n_splits': 5, 'shuffle': True, 'random_state': self.cfg.general_ml.seed}
-        
-        print(f'Class: {self.di_fx[0]}-{self.di_fx[1]}-{self.di_fx[2]}')
+
         
         # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)
         self.dataPipeline = Pipeline(   
@@ -81,8 +80,8 @@ class MxRetailSalary1(Di_F_Pipe_Regression_Pytorch_FFNN):
                                 use_cat_names = True
                                 ))),
 
-                    ('debbuging', pp.Debbuging()
-                     ),
+                    #('debbuging', pp.Debbuging()
+                    # ),
 
                     ('transformation', 
                         TransformerWrapper(
@@ -106,20 +105,23 @@ class MxRetailSalary1(Di_F_Pipe_Regression_Pytorch_FFNN):
                             transformer=MinMaxScaler()
                             )),                                     
                     ],
-            verbose=True)
+            verbose=cfg.data_pipeline.verbose)
         
         # and here you define the prediction model 
         self.model = Pytorch_FFNN_Regressor(input_dim=34)
-
-    def runDataPipeline(self):
-        super().runDataPipeline()
+   
+    def runDataPipeline(self, verbose: bool = False) -> dict:
+        result = super().runDataPipeline(verbose)
+        return result
             
-    def fit(self, tracking: bool) -> dict:
-        super().fit(tracking)
+    def fit(self, tracking: bool, verbose: bool = False) -> dict:
+        result = super().fit(tracking, verbose)
+        return result
 
     def fit_Kfold(self, tracking: bool = False) -> dict:
-        super().fit_Kfold(tracking)
-
+        result = super().fit_Kfold(tracking)
+        return result
+    
     def predict(self, X: pd.DataFrame):
         return super().predict(X)
     
