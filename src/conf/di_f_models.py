@@ -33,7 +33,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import DataLoader,TensorDataset,Subset,SubsetRandomSampler
+from torch.utils.data import Dataset, DataLoader,TensorDataset,Subset,SubsetRandomSampler
 
 
 
@@ -350,19 +350,12 @@ class prueba_NN(Di_FX_Pt_NN, nn.Module):
 
         #changing from datasets to tensors
         train_features = torch.tensor(train_features.values, dtype=torch.float)
-        train_labels = torch.tensor(train_labels.values, dtype=torch.float)
+        train_labels = torch.log(torch.tensor(train_labels.values, dtype=torch.float))  # scaling to log the labels
         validation_features = torch.tensor(validation_features.values, dtype=torch.float)
-        validation_labels = torch.tensor(validation_labels.values, dtype=torch.float)
+        validation_labels = torch.log(torch.tensor(validation_labels.values, dtype=torch.float))  # scaling to log the labels
         test_features = torch.tensor(test_features.values, dtype=torch.float)
-        test_labels = torch.tensor(test_labels.values, dtype=torch.float)
-        
-        #normalcols, train_features = normalize(train_features)
-        train_labels = ml_util.logar(train_labels)
-        #normalcols, validation_features = normalize(validation_features)
-        validation_labels = ml_util.logar(validation_labels)
-        #normalcols, test_features = normalize(test_features)
-        test_labels = ml_util.logar(test_labels)
-        
+        test_labels = torch.log(torch.tensor(test_labels.values, dtype=torch.float))  # scaling to log the labels
+    
        
        #creating datasets and dataloaders
         train_data = TensorDataset(train_features, train_labels)
@@ -370,7 +363,7 @@ class prueba_NN(Di_FX_Pt_NN, nn.Module):
         
         train_loader = DataLoader(train_data, batch_size=self.batch_size, shuffle=True, drop_last=True)
         validation_loader = DataLoader(validation_data, batch_size=self.batch_size, shuffle=True, drop_last=True)
-
+ 
         if tracking:
             #setting up mlflow    
             mlflow.set_tracking_uri(self.cfg.mlflow.tracking_uri)
@@ -409,7 +402,7 @@ class prueba_NN(Di_FX_Pt_NN, nn.Module):
                 
             self.r2[e] = r2_score(y, y_pred)
             if (e+1)%100 == 0:
-                print(f"epoch:{e}, loss:{self.losses[e]}, r2:{self.r2[e]}")
+                print(f"epoch:{e+1}, loss:{self.losses[e]}, r2:{self.r2[e]}")
        
         #calculating trainning score
         y_pred = self.forward(validation_features)
@@ -422,6 +415,7 @@ class prueba_NN(Di_FX_Pt_NN, nn.Module):
         #calculating testing score
         y_pred = self.forward(test_features)
         #mse_test = mean_squared_error(y_pred.detach().numpy(), test_labels.detach().numpy())
+        
         mse_test = F.mse_loss(test_labels, y_pred)
         r2_test = r2_score(y_pred.detach().numpy(), test_labels.detach().numpy())
         print(mse_test, r2_test) 

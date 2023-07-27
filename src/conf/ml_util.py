@@ -81,6 +81,7 @@ def write_spplited(pathfile_train_futures: os.path,
     print(f'                             {pathfile_test_labels}')
 
 
+# Transformers: 
 
 def minmax(values):  # This util, transform columns of a matrix between min-max and returns also the min/max values used in each column 
     minmax_cols = {} 
@@ -102,5 +103,12 @@ def normalize(values):  # This util, normalize columns of a matrix and returns a
     return normalize_cols, values
 
 
-def logar(values):  
-    return torch.log(values)
+class logar_labels:
+    def __init__(self, values):
+        self.__call__(values)
+        
+    
+    def __call__(self, values):  # values is a  tupla of x,y 
+        x, y = values 
+        y = torch.log(y) 
+        return x,y

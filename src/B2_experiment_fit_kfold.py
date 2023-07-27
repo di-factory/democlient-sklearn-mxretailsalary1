@@ -12,7 +12,7 @@ def main(cfg: DictConfig) -> None:
     experiment = MxRetailSalary1(cfg)
     print(f'Created experiment:{experiment.id}')
     print(f'runing datapipeline transformation')
-    experiment.fit(tracking=cfg.general_ml.tracking_on)    
+    experiment.fit_Kfold(tracking=cfg.general_ml.tracking_on)    
     
     print(f'trainning concluded')
 

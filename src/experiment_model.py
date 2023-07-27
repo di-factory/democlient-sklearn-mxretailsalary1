@@ -9,7 +9,7 @@ from pycaret.internal.pipeline import Pipeline
 from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardScaler, SimpleImputer 
 from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder, MinMaxScaler
 
-from src.conf.di_f_models import Di_FX_Voting
+from src.conf.di_f_pipe import Di_F_Pipe_Regression_Sklearn_Voating as Voting
 import src.conf.preprocessors as pp
 
 from catboost import CatBoostRegressor
@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from sklearn.metrics import r2_score, mean_absolute_percentage_error
 
 
-class MxRetailSalary1(Di_FX_Voting):
+class MxRetailSalary1(Voting):
     
     class Features(BaseModel):  # Rewritting Features class to include the actual features
         state: str = 'Hidalgo'
