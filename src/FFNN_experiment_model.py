@@ -110,7 +110,7 @@ class MxRetailSalary1(Di_F_Pipe_Regression_Pytorch_FFNN):
         
         # and here you define the prediction model 
         self.model = Pytorch_FFNN_Regressor(input_dim=34)
-        
+
     def runDataPipeline(self):
         super().runDataPipeline()
             

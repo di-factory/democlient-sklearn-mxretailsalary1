@@ -102,18 +102,10 @@ class Di_F_Pipe:  # Main class for all the experiments definitions
             print(f"Error saving the datapipeline: {e}")
         
     def load_model(self) -> None:  # this method loads the model prediction that was created/saved in fits methods
-        try:
-            self.model = joblib.load(os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model))
-            print("model loaded successfully!")
-        except Exception as e:
-            print(f"Error loading the model: {e}")
+        pass
     
     def save_model(self) -> None:  # this method saves the model prediction
-        try:
-            joblib.dump(self.model, os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model))
-            print("model saved successfully!")
-        except Exception as e:
-            print(f"Error saving the model: {e}")
+        pass
         
     def runDataPipeline(self) -> None:  # this method runs the dataPipeline object-class
         pass
@@ -181,6 +173,21 @@ class Di_F_Pipe_Regression_Sklearn(Di_F_Pipe_Regression):
         super().__init__(cfg)
         self.di_fx.append('Sklearn')  # Level 1 class of the experiment 
 
+    def load_model(self) -> None:  # this method loads the model prediction that was created/saved in fits methods
+        try:
+            self.model = joblib.load(os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model))
+            print("model loaded successfully!")
+        except Exception as e:
+            print(f"Error loading the model: {e}")
+    
+    def save_model(self) -> None:  # this method saves the model prediction
+        try:
+            joblib.dump(self.model, os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model))
+            print("model saved successfully!")
+        except Exception as e:
+            print(f"Error saving the model: {e}")
+
+   
     def runDataPipeline(self) -> None:  # this method runs the dataPipeline object-class
 
         def transform_data(data: pd.DataFrame) -> pd.DataFrame:
@@ -391,8 +398,8 @@ class Di_F_Pipe_Regression_Sklearn(Di_F_Pipe_Regression):
             print(f"test scoring {score['id']}: {sc}")
         results['test']=scores
         
-        
-        
+        # saving the model
+        self.save_model()
         
         if tracking:
             # stoping mlflow run experiment
@@ -420,6 +427,20 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         super().__init__(cfg)
         self.di_fx.append('Pytorch')  # Level 1 class of the experiment 
 
+    def load_model(self) -> None:  # this method loads the model prediction that was created/saved in fits methods
+        try:
+            self.model.load_state_dict(torch.load(os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model)))
+            print("model loaded successfully!")
+        except Exception as e:
+            print(f"Error loading the model: {e}")
+    
+    def save_model(self) -> None:  # this method saves the model prediction
+        try:
+            torch.save(self.model.state_dict(), os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model))
+            print("model saved successfully!")
+        except Exception as e:
+            print(f"Error saving the model: {e}")
+    
     def runDataPipeline(self) -> None:  # this method runs the dataPipeline object-class
 
         def transform_data(data: pd.DataFrame) -> pd.DataFrame:
@@ -577,6 +598,9 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         results['test']=scores
         
         
+        # saving the model
+        self.save_model()
+        
         if tracking:
             # stoping mlflow run experiment
             mlflow.end_run()
@@ -588,7 +612,15 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         pass        
    
     def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
-        return self.model.forward(X)
+        self.load_dataPipeline()
+        self.load_model()
+        
+        X_transformed = self.dataPipeline.transform(X)
+        #print(X_transformed)
+        result = self.model.forward(torch.tensor(X_transformed.values, dtype=torch.float))
+        result = torch.exp(result).detach().numpy()
+        print(result)
+        return np.array(result)
 
     def evaluate(self) -> dict:  # this method evaluate the tarinned model with unseen data of test dataset.
         pass

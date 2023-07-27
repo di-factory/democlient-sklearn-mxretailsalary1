@@ -47,8 +47,8 @@ file_names:
   
   ml_profiling_best: ml_profiling_best
   api_ml_profiling: ml_profiling_best_API
-  datapipeline: datapipeline.pkl
-  model: model.pkl
+  datapipeline: datapipeline
+  model: model
 
   streamlit_predict_model: streamlit_predict.pkl
   fastapi_predict_model: fastapi_predict.pkl
