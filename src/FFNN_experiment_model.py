@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 from sklearn.ensemble import GradientBoostingRegressor, VotingRegressor
 from sklearn.linear_model import HuberRegressor, BayesianRidge, Ridge
 
-from pycaret.internal.pipeline import Pipeline
+from pycaret.internal.pipeline import Pipeline as Pycaret_Pipeline
 from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardScaler, SimpleImputer 
 from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder, MinMaxScaler
 
@@ -22,26 +22,12 @@ import torch.nn as nn
 from collections import OrderedDict
 
 from src.conf.models import Pytorch_FFNN_Regressor
+from src.conf.ml_util import Pycaret_DataPipeline
 
 
-class MxRetailSalary1(Di_F_Pipe_Regression_Pytorch_FFNN):
-    class Features(BaseModel):  # Rewritting Features class to include the actual features
-        state: str = 'Hidalgo'
-        income_employee_day: float = 4000.00
-        employees_business: int = 6  
-
-    def __init__(self, cfg: DictConfig):
-        super().__init__(cfg)
-        
-        self.scores = [{'id': 'mape', 'metric': mean_absolute_percentage_error},
-                       {'id': 'r2', 'metric': r2_score}]
-        
-        self.kfold = {'n_splits': 5, 'shuffle': True, 'random_state': self.cfg.general_ml.seed}
-
-        
-        # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)
-        self.dataPipeline = Pipeline(   
-            steps = [                 
+# Create an instance of Pycaret Pipeline class:
+mx_retail_salary1_datapipeline = Pycaret_Pipeline(   
+                steps = [                 
                     ('numerical_imputer',
                         TransformerWrapper(
                             #exclude = ['match'],
@@ -81,7 +67,7 @@ class MxRetailSalary1(Di_F_Pipe_Regression_Pytorch_FFNN):
                                 ))),
 
                     #('debbuging', pp.Debbuging()
-                    # ),
+                     #),
 
                     ('transformation', 
                         TransformerWrapper(
@@ -103,19 +89,40 @@ class MxRetailSalary1(Di_F_Pipe_Regression_Pytorch_FFNN):
                                 # with_std=True
                                 # ),
                             transformer=MinMaxScaler()
-                            )),                                     
+                            )),                                          
                     ],
-            verbose=cfg.data_pipeline.verbose)
+                verbose=False)
+
+# ... and an instance of model Pycaret Pipeline:
+mx_retail_salary1_mlpipeline = Pytorch_FFNN_Regressor(input_dim=34)
+
+class MxRetailSalary1(Di_F_Pipe_Regression_Pytorch_FFNN):
+    class Features(BaseModel):  # Rewritting Features class to include the actual features
+        state: str = 'Hidalgo'
+        income_employee_day: float = 4000.00
+        employees_business: int = 6  
+
+    def __init__(self, cfg: DictConfig, data_pipeline=mx_retail_salary1_datapipeline, ml_pipeline=mx_retail_salary1_mlpipeline):
+        super().__init__(cfg)
         
+        self.scores = [{'id': 'mape', 'metric': mean_absolute_percentage_error},
+                       {'id': 'r2', 'metric': r2_score}]
+        
+        self.kfold = {'n_splits': 5, 'shuffle': True, 'random_state': self.cfg.general_ml.seed}
+
+        
+        # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)
+        self.dataPipeline = Pycaret_DataPipeline(cfg, data_pipeline)
+
         # and here you define the prediction model 
-        self.model = Pytorch_FFNN_Regressor(input_dim=34)
+        self.model = ml_pipeline
    
-    def runDataPipeline(self, verbose: bool = False) -> dict:
-        result = super().runDataPipeline(verbose)
+    def runDataPipeline(self) -> dict:
+        result = super().runDataPipeline()
         return result
             
-    def fit(self, tracking: bool, verbose: bool = False) -> dict:
-        result = super().fit(tracking, verbose)
+    def fit(self, tracking: bool) -> dict:
+        result = super().fit(tracking)
         return result
 
     def fit_Kfold(self, tracking: bool = False) -> dict:

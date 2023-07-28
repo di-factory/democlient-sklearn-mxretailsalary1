@@ -36,7 +36,6 @@ import torch.optim as optim
 from torch.utils.data import DataLoader,TensorDataset,Subset,SubsetRandomSampler
 
 
-
 # from mlflow.models.signature import infer_signature
 
 # --------- LEVEL 0 -----------------
@@ -86,31 +85,17 @@ class Di_F_Pipe:  # Main class for all the experiments definitions
         self.catalogues: dict = create_catalogues()
         self.scores: List[self.Di_FX_score] = None
         self.kfold = self.Di_FX_Kfold()
-  
-    def load_dataPipeline(self) -> None:  # this method loads the dataPipeline model that was created/saved in runDataPipeline()
-        try:
-            self.dataPipeline = joblib.load(os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.datapipeline))
-            print("datapipeline loaded successfully!")
-        except Exception as e:
-            print(f"Error loading the datapipeline: {e}")
-        
-    def save_dataPipeline(self) -> None:  # this method saves the dataPipeline model
-        try:
-            joblib.dump(self.dataPipeline, os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.datapipeline))
-            print("Datapipeline saved successfully!")
-        except Exception as e:
-            print(f"Error saving the datapipeline: {e}")
-        
+       
     def load_model(self) -> None:  # this method loads the model prediction that was created/saved in fits methods
         pass
     
     def save_model(self) -> None:  # this method saves the model prediction
         pass
         
-    def runDataPipeline(self, verbose: bool = False) -> dict:  # this method runs the dataPipeline object-class
+    def runDataPipeline(self) -> dict:  # this method runs the dataPipeline object-class
         pass
 
-    def fit(self, tracking: bool = False, verbose: bool = False) -> dict:  # this methods train the model prediction defined.
+    def fit(self, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
         pass
 
     def fit_Kfold(self) -> dict:  # this method use Crossvalidations in trainning
@@ -121,7 +106,7 @@ class Di_F_Pipe:  # Main class for all the experiments definitions
 
     def evaluate(self) -> dict:  # this method evaluate the tarinned model with unseen data of test dataset.
         pass
-    
+
 
 # --------- LEVEL 1 ------Type of experiment: Regression, Classification, etc-----------
 class Di_F_Pipe_Regression(Di_F_Pipe):
@@ -129,10 +114,10 @@ class Di_F_Pipe_Regression(Di_F_Pipe):
         super().__init__(cfg)
         self.di_fx.append('Regression')  # Level 1 class of the experiment 
 
-    def runDataPipeline(self, verbose: bool = False) -> dict:  # this method runs the dataPipeline object-class
+    def runDataPipeline(self) -> dict:  # this method runs the dataPipeline object-class
         pass
 
-    def fit(self, tracking: bool = False, verbose: bool = False) -> dict:  # this methods train the model prediction defined.
+    def fit(self, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
         pass
     
     def fit_Kfold(self, tracking: bool = False) -> dict:  # this method use Crossvalidations in trainning
@@ -166,12 +151,11 @@ class Di_F_Pipe_Classification(Di_F_Pipe):
         pass
 
 
-
 # --------- LEVEL 2 ---------- platform for solution: sklearn, pytorch,, Tensorflow, etc.
-class Di_F_Pipe_Regression_Sklearn(Di_F_Pipe_Regression):
+class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
     def __init__(self, cfg: DictConfig):
         super().__init__(cfg)
-        self.di_fx.append('Sklearn')  # Level 1 class of the experiment 
+        self.di_fx.append('Pycaret')  # Level 1 class of the experiment 
 
     def load_model(self) -> None:  # this method loads the model prediction that was created/saved in fits methods
         try:
@@ -187,29 +171,14 @@ class Di_F_Pipe_Regression_Sklearn(Di_F_Pipe_Regression):
         except Exception as e:
             print(f"Error saving the model: {e}")
  
-    def runDataPipeline(self, verbose: bool = False) -> dict:  # this method runs the dataPipeline object-class
+    def runDataPipeline(self) -> dict:  # this method runs the dataPipeline object-class
 
-        def transform_data(data: pd.DataFrame, verbose: bool = False) -> pd.DataFrame:
-            """
-            to transform data using a sklearn pipeline technology 
-            data is the whole dataset, fetures + label
-            """
-            if verbose:
-                print(' STEP2: Transforming data using a PIPELINE')
-   
-            dpl = self.dataPipeline  # instanciating dataPipeline object
-            labels = data[self.cfg.data_fields.label]
-            dpl.fit(data[self.feature_list], labels)  # only fitting features, no label
-            df = dpl.transform(data[self.feature_list])  # transformations is making on features
-            
-
-            if verbose:
-                print(f'       After transformation: (rows,cols) {df.shape}')
-            df[self.cfg.data_fields.label] = labels  # adding column labels to dataframe
-            return df
-
-        # loading pre-processed data from notebook data profiling
-        result ={}
+        result ={}  # To grab results
+        
+        # Set variable verbose to activate prints in function
+        verbose = self.cfg.data_pipeline.verbose
+        
+        # loading pre-processed data from notebook data profiling        
         pathfile_l = os.path.join(self.cfg.paths.processed_data_dir, self.cfg.file_names.processed_data)
         data = ml_util.load_data(pathfile_l, 
                                  verbose = verbose
@@ -221,7 +190,19 @@ class Di_F_Pipe_Regression_Sklearn(Di_F_Pipe_Regression):
 
         # executing transformation
         result['initial_shape']=data.shape
-        data = transform_data(data=data, verbose=verbose)
+        
+        if verbose:
+            print('runDataPipeline(): Transforming data init')
+   
+        labels = data[self.cfg.data_fields.label]
+        self.dataPipeline.fit(data[self.feature_list], labels)  # only fitting features, no label
+        data = self.dataPipeline.transform(data[self.feature_list])  # transformations is making on features          
+        data[self.cfg.data_fields.label] = labels  # adding column labels to dataframe
+        
+        if verbose:
+                print(f'runDataPipeline(): After transformation: (rows,cols) {data.shape}')
+
+
         result['final_shape']=data.shape
 
         # write the whole transformed data
@@ -246,10 +227,13 @@ class Di_F_Pipe_Regression_Sklearn(Di_F_Pipe_Regression):
                 verbose = verbose)    
         
         # save data pipeline model
-        self.save_dataPipeline()
+        self.dataPipeline.save_dataPipeline()
         return result
 
-    def fit(self, tracking: bool = False, verbose: bool = False) -> dict:  # this methods train the model prediction defined.
+    def fit(self, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
+        # Set variable verbose to activate prints in function
+        verbose = self.cfg.ml_pipeline.verbose
+        
         # Load the data
         train_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir,
                                                   self.cfg.file_names.train_features))
@@ -320,7 +304,10 @@ class Di_F_Pipe_Regression_Sklearn(Di_F_Pipe_Regression):
         return results
 
     def fit_Kfold(self, tracking: bool = False) -> dict:  # this method use Crossvalidations in trainning
-        # Load the data
+    # Set variable verbose to activate prints in function
+        verbose = self.cfg.ml_pipeline.verbose
+    
+    # Load the data
         train_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir,
                                                   self.cfg.file_names.train_features))
         train_labels = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
@@ -360,17 +347,20 @@ class Di_F_Pipe_Regression_Sklearn(Di_F_Pipe_Regression):
         scores_v = {}  # this dict is to grab the different metrics
         for score in self.scores:  # Initializing vectors to cumpute scores in each fold
             scores_v[score['id']]=0
+        if verbose:
+            print('scores pre-Kfold:')
         
-        print('scores pre-Kfold:')
         for score in self.scores:
             sc = cross_val_score(self.model, kfold_features, np.ravel(kfold_labels), cv=5, scoring=make_scorer(score['metric'])).mean()
             scores.append((score['id'], sc))
-            print(f"cross_val_scoring (before kfold){score['id']}: {sc}")
+            if verbose:
+                print(f"cross_val_scoring (before kfold){score['id']}: {sc}")
         results['cross_val_score']= scores
         
         # Fit the model
-        print('fitting the  model')
-        print(f'dimensions: features-> {kfold_features.shape}, labels-> {kfold_labels.shape}')
+        if verbose:
+            print('fitting the  model')
+            print(f'dimensions: features-> {kfold_features.shape}, labels-> {kfold_labels.shape}')
     
         for train_index, test_index in kfold.split(kfold_features):
            
@@ -386,27 +376,36 @@ class Di_F_Pipe_Regression_Sklearn(Di_F_Pipe_Regression):
                 sc = score['metric'](y_val, y_pred)
                 scores_v[score['id']]+=sc
    
-        print('scores post-Kfold:')
-        scores=[]
+        if verbose:
+            print('scores post-Kfold:')
+        
+        scores = []
         for score in self.scores:
-            print(f"scoring after kfold {score['id']}: {scores_v[score['id']]/self.kfold['n_splits']}")
+            if verbose:
+                print(f"scoring after kfold {score['id']}: {scores_v[score['id']]/self.kfold['n_splits']}")
             scores.append((score['id'], sc))
         results['train']= scores
         
         # Evaluating the model with unseen data
-        print('Model evaluation:')
+        if verbose:
+            print('Model evaluation:')
+            
         X_test = np.array(test_features)
         y_test = np.array(test_labels)
         
         y_pred = self.model.predict(X_test)
         
-        scores=[]
+        scores = []
         y_pred = self.model.predict(X_test)
-        print('scores for test:')
+        
+        if verbose:
+            print('scores for test:')
+        
         for score in self.scores:
             sc = score['metric'](y_test, y_pred)
             scores.append((score['id'], sc))
-            print(f"test scoring {score['id']}: {sc}")
+            if verbose:
+                print(f"test scoring {score['id']}: {sc}")
         results['test']=scores
         
         # saving the model
@@ -416,12 +415,11 @@ class Di_F_Pipe_Regression_Sklearn(Di_F_Pipe_Regression):
             # stoping mlflow run experiment
             mlflow.end_run()
         
-        print(results)
         return results
    
     def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
         #print(X.head(), X.dtypes)
-        self.load_dataPipeline()
+        self.dataPipeline.load_dataPipeline()
         self.load_model()
         
         X_transformed = self.dataPipeline.transform(X)
@@ -432,6 +430,7 @@ class Di_F_Pipe_Regression_Sklearn(Di_F_Pipe_Regression):
 
     def evaluate(self) -> dict:  # this method evaluate the tarinned model with unseen data of test dataset.
         pass
+
 
 class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
     def __init__(self, cfg: DictConfig):
@@ -452,29 +451,14 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         except Exception as e:
             print(f"Error saving the model: {e}")
     
-    def runDataPipeline(self, verbose: bool = False) -> dict:  # this method runs the dataPipeline object-class
+    def runDataPipeline(self) -> dict:  # this method runs the dataPipeline object-class
 
-        def transform_data(data: pd.DataFrame, verbose: bool = False) -> pd.DataFrame:
-            """
-            to transform data using a sklearn pipeline technology 
-            data is the whole dataset, fetures + label
-            """
-            if verbose:
-                print(' STEP2: Transforming data using a PIPELINE')
-   
-            dpl = self.dataPipeline  # instanciating dataPipeline object
-            labels = data[self.cfg.data_fields.label]
-            dpl.fit(data[self.feature_list], labels)  # only fitting features, no label
-            df = dpl.transform(data[self.feature_list])  # transformations is making on features
-            
-
-            if verbose:
-                print(f'       After transformation: (rows,cols) {df.shape}')
-            df[self.cfg.data_fields.label] = labels  # adding column labels to dataframe
-            return df
-
-        # loading pre-processed data from notebook data profiling
-        result ={}
+        result ={}  # To grab results
+        
+        # Set variable verbose to activate prints in function
+        verbose = self.cfg.data_pipeline.verbose
+        
+        # loading pre-processed data from notebook data profiling        
         pathfile_l = os.path.join(self.cfg.paths.processed_data_dir, self.cfg.file_names.processed_data)
         data = ml_util.load_data(pathfile_l, 
                                  verbose = verbose
@@ -486,7 +470,19 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
 
         # executing transformation
         result['initial_shape']=data.shape
-        data = transform_data(data=data, verbose=verbose)
+        
+        if verbose:
+            print('runDataPipeline(): Transforming data init')
+   
+        labels = data[self.cfg.data_fields.label]
+        self.dataPipeline.fit(data[self.feature_list], labels)  # only fitting features, no label
+        data = self.dataPipeline.transform(data[self.feature_list])  # transformations is making on features          
+        data[self.cfg.data_fields.label] = labels  # adding column labels to dataframe
+        
+        if verbose:
+                print(f'runDataPipeline(): After transformation: (rows,cols) {data.shape}')
+
+
         result['final_shape']=data.shape
 
         # write the whole transformed data
@@ -511,10 +507,10 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
                 verbose = verbose)    
         
         # save data pipeline model
-        self.save_dataPipeline()
+        self.dataPipeline.save_dataPipeline()
         return result
-    
-    def fit(self, tracking: bool = False, verbose: bool = False) -> dict:  # this methods train the model prediction defined.
+
+    def fit(self, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
                 # Load the data
         train_features = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir,
                                                   self.cfg.file_names.train_features))
@@ -529,7 +525,8 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         test_labels = pd.read_csv(os.path.join(self.cfg.paths.processed_data_dir, 
                                                self.cfg.file_names.test_labels))
         
-        
+        # Set variable verbose to activate prints in function
+        verbose = self.cfg.ml_pipeline.verbose
 
         #changing from datasets to tensors
         train_features = torch.tensor(train_features.values, dtype=torch.float)
@@ -633,7 +630,7 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         pass        
    
     def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
-        self.load_dataPipeline()
+        self.dataPipeline.load_dataPipeline()
         self.load_model()
         
         X_transformed = self.dataPipeline.transform(X)
@@ -647,21 +644,18 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         pass
 
 
-
-
 # --------- LEVEL 3 ---------- technology: model + datapipe to solve experiment
-
-class Di_F_Pipe_Regression_Sklearn_Voating(Di_F_Pipe_Regression_Sklearn):  
+class Di_F_Pipe_Regression_Pycaret_Voating(Di_F_Pipe_Regression_Pycaret):  
     def __init__(self, cfg: DictConfig):
         super().__init__(cfg)
         self.di_fx.append('Voting')  # Level 2 class of the experiment 
     
     def runDataPipeline(self, verbose: bool = False) -> dict:
-        result = super().runDataPipeline(verbose)
+        result = super().runDataPipeline()
         return result
     
     def fit(self, tracking: bool = False, verbose: bool = False) -> dict:  # this methods train the model prediction defined.
-        result = super().fit(tracking, verbose)
+        result = super().fit(tracking)
         return result
 
     def fit_Kfold(self, tracking: bool = False) -> dict:  # this method use Crossvalidations in trainning
@@ -678,12 +672,12 @@ class Di_F_Pipe_Regression_Pytorch_FFNN(Di_F_Pipe_Regression_Pytorch):
         super().__init__(cfg)
         self.di_fx.append('FFNN')  # Level 2 class of the experiment 
 
-    def runDataPipeline(self, verbose: bool = False) -> dict:
-        result = super().runDataPipeline(verbose)
+    def runDataPipeline(self) -> dict:
+        result = super().runDataPipeline()
         return result
  
-    def fit(self, tracking: bool = False, verbose: bool = False) -> dict:  # this methods train the model prediction defined.
-        result = super().fit(tracking, verbose)
+    def fit(self, tracking: bool = False) -> dict:  # this methods train the model prediction defined.
+        result = super().fit(tracking)
         return result
 
     def fit_Kfold(self, tracking: bool = False) -> dict:  # this method use Crossvalidations in trainning

@@ -5,38 +5,23 @@ from omegaconf import DictConfig
 from sklearn.ensemble import GradientBoostingRegressor, VotingRegressor
 from sklearn.linear_model import HuberRegressor, BayesianRidge, Ridge
 
-from pycaret.internal.pipeline import Pipeline
-from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardScaler, SimpleImputer 
-from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder, MinMaxScaler
+from pycaret.internal.pipeline import Pipeline as Pycaret_Pipeline
 
-from src.conf.di_f_pipe import Di_F_Pipe_Regression_Sklearn_Voating as Voting
+from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardScaler, SimpleImputer, MinMaxScaler 
+from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder
+
+from src.conf.di_f_pipe import Di_F_Pipe_Regression_Pycaret_Voating
 import src.conf.preprocessors as pp
+from src.conf.ml_util import Pycaret_DataPipeline
 
 from catboost import CatBoostRegressor
 import pandas as pd
 from pydantic import BaseModel
 from sklearn.metrics import r2_score, mean_absolute_percentage_error
 
-
-class MxRetailSalary1(Voting):
-    
-    class Features(BaseModel):  # Rewritting Features class to include the actual features
-        state: str = 'Hidalgo'
-        income_employee_day: float = 4000.00
-        employees_business: int = 6  
-    
-    def __init__(self, cfg: DictConfig):
-        super().__init__(cfg)
-        
-        self.scores = [{'id': 'mape', 'metric': mean_absolute_percentage_error},
-                       {'id': 'r2', 'metric': r2_score}]
-        
-        self.kfold = {'n_splits': 5, 'shuffle': True, 'random_state': self.cfg.general_ml.seed}
-        
-        
-        # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)
-        self.dataPipeline = Pipeline(   
-            steps = [                 
+# Create an instance of Pycaret Pipeline class:
+mx_retail_salary1_datapipeline = Pycaret_Pipeline(   
+                steps = [                 
                     ('numerical_imputer',
                         TransformerWrapper(
                             #exclude = ['match'],
@@ -100,10 +85,10 @@ class MxRetailSalary1(Voting):
                             transformer=MinMaxScaler()
                             )),                                          
                     ],
-            verbose=cfg.data_pipeline.verbose)
-        
-        # and here you define the prediction model 
-        self.model = Pipeline(
+                verbose=False)
+
+# ... and an instance of model Pycaret Pipeline:
+mx_retail_salary1_mlpipeline = Pycaret_Pipeline(
             steps=[
                 ('actual_estimator', VotingRegressor(
                     estimators=[
@@ -118,16 +103,38 @@ class MxRetailSalary1(Voting):
                     n_jobs=-1,
                     weights=[0.2, 0.2, 0.2, 0.2, 0.2]
                     ))])
+
+class MxRetailSalary1(Di_F_Pipe_Regression_Pycaret_Voating):
+    
+    class Features(BaseModel):  # Rewritting Features class to include the actual features
+        state: str = 'Hidalgo'
+        income_employee_day: float = 4000.00
+        employees_business: int = 6  
+    
+    def __init__(self, cfg: DictConfig, data_pipeline=mx_retail_salary1_datapipeline, ml_pipeline=mx_retail_salary1_mlpipeline):
+        super().__init__(cfg)
+        
+        self.scores = [{'id': 'mape', 'metric': mean_absolute_percentage_error},
+                       {'id': 'r2', 'metric': r2_score}]
+        
+        self.kfold = {'n_splits': 5, 'shuffle': True, 'random_state': self.cfg.general_ml.seed}
+        
+        
+        # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)
+        self.dataPipeline = Pycaret_DataPipeline(cfg, data_pipeline)
+
+        # and here you define the prediction model 
+        self.model= ml_pipeline
    
-    def runDataPipeline(self, verbose: bool = False) -> dict:
-        result = super().runDataPipeline(verbose)
+    def runDataPipeline(self) -> dict:
+        result = super().runDataPipeline()
         return result
             
-    def fit(self, tracking: bool, verbose: bool = False) -> dict:
-        result = super().fit(tracking, verbose)
+    def fit(self, tracking: bool) -> dict:
+        result = super().fit(tracking)
         return result
 
-    def fit_Kfold(self, tracking: bool = False) -> dict:
+    def fit_Kfold(self, tracking: bool) -> dict:
         result = super().fit_Kfold(tracking)
         return result
     

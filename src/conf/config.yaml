@@ -93,7 +93,7 @@ data_pipeline:
   to_categorize: []
   category_to_num: []
   onehot_encoding: ['state']
-  verbose: False
+  verbose: True
 
   #-----------------------------------------------
   # categorical variables to transform to numerical variables
@@ -111,7 +111,7 @@ data_pipeline:
     
 ml_pipeline:
   model: tbd
-  verbose: False
+  verbose: True
 
 
 mlflow:
