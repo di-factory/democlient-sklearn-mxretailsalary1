@@ -1,6 +1,7 @@
 #version: july15, 2023
 
-import hydra
+from src.conf.di_f_logging import di_f_logger
+
 from omegaconf import DictConfig
 import pandas as pd
 import os
@@ -17,16 +18,16 @@ from torch.utils.data import Dataset
 import joblib
 
 
+
 def load_data(pathfile: os.path, encoding:str='', verbose: bool = False) -> pd.DataFrame:
     """
     to load data from raw directory and return a dataframe
     """
     if verbose:
-        print(f'load_data(): loading raw data...@ {pathfile}')
+        di_f_logger.info(f'load_data(): loading raw data...@ {pathfile}')
     df = pd.read_csv(pathfile, encoding=encoding)
     if verbose:
-        print(f'        Were loaded: (rows,cols) {df.shape}')
-        print( '------------------------------------------------------')
+        di_f_logger.info(f'        Were loaded: (rows,cols) {df.shape}')
     return df
 
 
@@ -37,9 +38,9 @@ def write_transformed(pathfile: os.path, data: pd.DataFrame, verbose: bool = Fal
      
      data.to_csv(pathfile, index=False)
      if verbose:
-        print(f'write_transformed(): File were created @ {pathfile}')
-        print( '------------------------------------------------------')
-        print( '------------------------------------------------------')
+        di_f_logger.info(f'write_transformed(): File were created @ {pathfile}')
+        #print( '------------------------------------------------------')
+        #print( '------------------------------------------------------')
 
 
 def write_spplited(pathfile_train_futures: os.path,
@@ -68,15 +69,15 @@ def write_spplited(pathfile_train_futures: os.path,
     
  
     if verbose:
-        print('write_splitted(): Split Files were created')
+        di_f_logger.info('write_splitted(): Split Files were created')
 
     df_train, df_test = train_test_split(data, test_size=percent_test, random_state=seed)
     df_train, df_validation = train_test_split(df_train, test_size= percent_valid, random_state=seed)
     
     if verbose:
-        print(f'write_spplited():Once spplited: (rows,cols) in train set: {df_train.shape}') 
-        print(f'                                  in validation set; {df_validation.shape}')
-        print(f'                                  and in test set: {df_test.shape}')
+        di_f_logger.info(f'write_spplited():Once spplited: (rows,cols) in train set: {df_train.shape}') 
+        di_f_logger.info(f'                                  in validation set; {df_validation.shape}')
+        di_f_logger.info(f'                                  and in test set: {df_test.shape}')
 
     df_train[label].to_csv(pathfile_train_labels, index=None)
     df_train.drop(str(label), axis=1).to_csv(pathfile_train_futures, index=None)
@@ -88,12 +89,12 @@ def write_spplited(pathfile_train_futures: os.path,
     df_test.drop(str(label), axis=1).to_csv(pathfile_test_futures, index=None)
 
     if verbose:
-        print(f'write_spplited(): Spplited data saved @ {pathfile_train_futures}')
-        print(f'                             {pathfile_train_labels}')
-        print(f'                             {pathfile_validation_futures}')
-        print(f'                             {pathfile_validation_labels}')
-        print(f'                             {pathfile_test_futures}')
-        print(f'                             {pathfile_test_labels}')
+        di_f_logger.info(f'write_spplited(): Spplited data saved @ {pathfile_train_futures}')
+        di_f_logger.info(f'                             {pathfile_train_labels}')
+        di_f_logger.info(f'                             {pathfile_validation_futures}')
+        di_f_logger.info(f'                             {pathfile_validation_labels}')
+        di_f_logger.info(f'                             {pathfile_test_futures}')
+        di_f_logger.info(f'                             {pathfile_test_labels}')
 
 
 # Transformers: 
@@ -157,16 +158,16 @@ class Pycaret_DataPipeline():
     def load_dataPipeline(self) -> None:  # this method loads the dataPipeline model that was created/saved in runDataPipeline()
         try:
             self.dataPipeline = joblib.load(os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.datapipeline))
-            print("datapipeline loaded successfully!")
+            di_f_logger.info("datapipeline loaded successfully!")
         except Exception as e:
-            print(f"Error loading the datapipeline: {e}")
+            di_f_logger.info(f"Error loading the datapipeline: {e}")
         
     def save_dataPipeline(self) -> None:  # this method saves the dataPipeline model
         try:
             joblib.dump(self.dataPipeline, os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.datapipeline))
-            print("Datapipeline saved successfully!")
+            di_f_logger.info("Datapipeline saved successfully!")
         except Exception as e:
-            print(f"Error saving the datapipeline: {e}")
+            di_f_logger.info(f"Error saving the datapipeline: {e}")
  
     
     

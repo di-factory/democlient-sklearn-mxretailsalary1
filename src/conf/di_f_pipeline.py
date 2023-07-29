@@ -36,6 +36,9 @@ import torch.optim as optim
 from torch.utils.data import DataLoader,TensorDataset,Subset,SubsetRandomSampler
 
 
+from src.conf.di_f_logging import di_f_logger
+
+
 # from mlflow.models.signature import infer_signature
 
 # --------- LEVEL 0 -----------------
@@ -160,16 +163,16 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
     def load_model(self) -> None:  # this method loads the model prediction that was created/saved in fits methods
         try:
             self.model = joblib.load(os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model))
-            print("model loaded successfully!")
+            di_f_logger.info("model loaded successfully!")
         except Exception as e:
-            print(f"Error loading the model: {e}")
+            di_f_logger.info(f"Error loading the model: {e}")
     
     def save_model(self) -> None:  # this method saves the model prediction
         try:
             joblib.dump(self.model, os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model))
-            print("model saved successfully!")
+            di_f_logger.info("model saved successfully!")
         except Exception as e:
-            print(f"Error saving the model: {e}")
+            di_f_logger.info(f"Error saving the model: {e}")
  
     def runDataPipeline(self) -> dict:  # this method runs the dataPipeline object-class
 
@@ -192,7 +195,7 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         result['initial_shape']=data.shape
         
         if verbose:
-            print('runDataPipeline(): Transforming data init')
+            di_f_logger.info('runDataPipeline(): Transforming data init')
    
         labels = data[self.cfg.data_fields.label]
         self.dataPipeline.fit(data[self.feature_list], labels)  # only fitting features, no label
@@ -200,7 +203,7 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         data[self.cfg.data_fields.label] = labels  # adding column labels to dataframe
         
         if verbose:
-                print(f'runDataPipeline(): After transformation: (rows,cols) {data.shape}')
+                di_f_logger.info(f'runDataPipeline(): After transformation: (rows,cols) {data.shape}')
 
 
         result['final_shape']=data.shape
@@ -262,8 +265,8 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
 
         # Fit the model
         if verbose:
-            print('fitting the  model')
-            print(f'dimensions: features-> {X_train.shape}, labels-> {y_train.shape}')
+            di_f_logger.info('fitting the  model')
+            di_f_logger.info(f'dimensions: features-> {X_train.shape}, labels-> {y_train.shape}')
    
         self.model.fit(X_train, np.ravel(y_train))
     
@@ -274,24 +277,24 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         #calculating trainning scores
         y_pred = self.model.predict(X_train)
         if verbose: 
-            print('scores for trainning:')
+            di_f_logger.info('scores for trainning:')
         for score in self.scores:
             sc = score['metric'](y_train, y_pred)
             scores.append((score['id'], sc))
             if verbose:
-                print(f"train scoring {score['id']}: {sc}")
+                di_f_logger.info(f"train scoring {score['id']}: {sc}")
         results['train']=scores
 
         #calculating testing scores
         scores = []
         y_pred = self.model.predict(test_features)
         if verbose:
-            print('scores for test:')
+            di_f_logger.info('scores for test:')
         for score in self.scores:
             sc = score['metric'](test_labels, y_pred)
             scores.append((score['id'], sc))
             if verbose:
-                print(f"test scoring {score['id']}: {sc}")
+                di_f_logger.info(f"test scoring {score['id']}: {sc}")
         results['test']=scores
         
         # saving the model
@@ -348,19 +351,19 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         for score in self.scores:  # Initializing vectors to cumpute scores in each fold
             scores_v[score['id']]=0
         if verbose:
-            print('scores pre-Kfold:')
+            di_f_logger.info('scores pre-Kfold:')
         
         for score in self.scores:
             sc = cross_val_score(self.model, kfold_features, np.ravel(kfold_labels), cv=5, scoring=make_scorer(score['metric'])).mean()
             scores.append((score['id'], sc))
             if verbose:
-                print(f"cross_val_scoring (before kfold){score['id']}: {sc}")
+                di_f_logger.info(f"cross_val_scoring (before kfold){score['id']}: {sc}")
         results['cross_val_score']= scores
         
         # Fit the model
         if verbose:
-            print('fitting the  model')
-            print(f'dimensions: features-> {kfold_features.shape}, labels-> {kfold_labels.shape}')
+            di_f_logger.info('fitting the  model')
+            di_f_logger.info(f'dimensions: features-> {kfold_features.shape}, labels-> {kfold_labels.shape}')
     
         for train_index, test_index in kfold.split(kfold_features):
            
@@ -377,18 +380,18 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
                 scores_v[score['id']]+=sc
    
         if verbose:
-            print('scores post-Kfold:')
+            di_f_logger.info('scores post-Kfold:')
         
         scores = []
         for score in self.scores:
             if verbose:
-                print(f"scoring after kfold {score['id']}: {scores_v[score['id']]/self.kfold['n_splits']}")
+                di_f_logger.info(f"scoring after kfold {score['id']}: {scores_v[score['id']]/self.kfold['n_splits']}")
             scores.append((score['id'], sc))
         results['train']= scores
         
         # Evaluating the model with unseen data
         if verbose:
-            print('Model evaluation:')
+            di_f_logger.info('Model evaluation:')
             
         X_test = np.array(test_features)
         y_test = np.array(test_labels)
@@ -399,13 +402,13 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         y_pred = self.model.predict(X_test)
         
         if verbose:
-            print('scores for test:')
+            di_f_logger.info('scores for test:')
         
         for score in self.scores:
             sc = score['metric'](y_test, y_pred)
             scores.append((score['id'], sc))
             if verbose:
-                print(f"test scoring {score['id']}: {sc}")
+                di_f_logger.info(f"test scoring {score['id']}: {sc}")
         results['test']=scores
         
         # saving the model
@@ -418,14 +421,13 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         return results
    
     def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
-        #print(X.head(), X.dtypes)
+        di_f_logger.info(f"Loading data pipeline and ml pipeline trainned models")
         self.dataPipeline.load_dataPipeline()
         self.load_model()
-        
+        di_f_logger.info(f"predicting a vector of {X.shape}")
         X_transformed = self.dataPipeline.transform(X)
-        #print(X_transformed)
         result = self.model.predict(X_transformed)
-        print(result)
+        
         return np.array(result)
 
     def evaluate(self) -> dict:  # this method evaluate the tarinned model with unseen data of test dataset.
@@ -440,16 +442,16 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
     def load_model(self) -> None:  # this method loads the model prediction that was created/saved in fits methods
         try:
             self.model.load_state_dict(torch.load(os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model)))
-            print("model loaded successfully!")
+            di_f_logger.info("model loaded successfully!")
         except Exception as e:
-            print(f"Error loading the model: {e}")
+            di_f_logger.info(f"Error loading the model: {e}")
     
     def save_model(self) -> None:  # this method saves the model prediction
         try:
             torch.save(self.model.state_dict(), os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model))
-            print("model saved successfully!")
+            di_f_logger.info("model saved successfully!")
         except Exception as e:
-            print(f"Error saving the model: {e}")
+            di_f_logger.info(f"Error saving the model: {e}")
     
     def runDataPipeline(self) -> dict:  # this method runs the dataPipeline object-class
 
@@ -553,8 +555,8 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
 
         # Fit the model
         if verbose:
-            print('fitting the  model')
-            print(f'dimensions: features-> {train_features.shape}, labels-> {train_labels.shape}')
+            di_f_logger.info('fitting the  model')
+            di_f_logger.info(f'dimensions: features-> {train_features.shape}, labels-> {train_labels.shape}')
         
        
         # Initializing dict results, scores and scores_v
@@ -596,7 +598,7 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
                 scores_v[score['id']]+=sc
             
             if (e+1)%100 == 0 and verbose:
-                print(f"epoch:{e+1}, loss:{self.losses[e]}")
+                di_f_logger.info(f"epoch:{e+1}, loss:{self.losses[e]}")
         
         for score in self.scores:  # geting mean of each metric for each epoch
             scores.append((score['id'], scores_v[score['id']]/self.model.num_epochs))
@@ -605,15 +607,15 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         
         # Claculating metrics for testing
         self.model.eval()        
-        scores=[]
+        scores = []
         y_pred = self.model.forward(test_features)
         if verbose:
-            print('scores for test:')
+            di_f_logger.info('scores for test:')
         for score in self.scores:
             sc = score['metric'](test_labels.detach().numpy(), y_pred.detach().numpy())
             scores.append((score['id'], sc))
             if verbose:
-                print(f"test scoring {score['id']}: {sc}")
+                di_f_logger.info(f"test scoring {score['id']}: {sc}")
         results['test']=scores
         
         
@@ -630,14 +632,18 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         pass        
    
     def predict(self, X: pd.DataFrame) -> np.array:  # this method makes predictions of unseen incomig data 
+        di_f_logger.info(f"Loading data pipeline and ml pipeline trainned models")
+        
         self.dataPipeline.load_dataPipeline()
         self.load_model()
         
+        di_f_logger.info(f"predicting a vector of {X.shape}")
+        
         X_transformed = self.dataPipeline.transform(X)
-        #print(X_transformed)
+ 
         result = self.model.forward(torch.tensor(X_transformed.values, dtype=torch.float))
         result = torch.exp(result).detach().numpy()
-        print(result)
+
         return np.array(result)
 
     def evaluate(self) -> dict:  # this method evaluate the tarinned model with unseen data of test dataset.
