@@ -14,7 +14,8 @@ general_ml:
 
 paths:
   project_dir: /home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1 #project directory in this instance
-  
+  di_f_pipeline_log_dir: ${paths.project_dir}/logs 
+
   raw_data_dir: ${paths.project_dir}/data/raw #raw_data directory
   processed_data_dir: ${paths.project_dir}/data/processed #processed data, from raw as result of data profiling (notebook)
   interim_data_dir: ${paths.project_dir}/data/interim #intermidiate data, from processed as result of data profiling in pipeline
@@ -30,6 +31,7 @@ paths:
   flask_app_dir: ${paths.project_dir}/Apps/Flask
 
 file_names:
+  di_f_pipeline_log: ${general_ml.experiment}_log.log
   raw_file : raw-data.csv #name of raw_data file
 
   processed_data: processed_data.csv #name of processed data file (Notebook)
@@ -93,7 +95,7 @@ data_pipeline:
   to_categorize: []
   category_to_num: []
   onehot_encoding: ['state']
-  verbose: True
+  verbose: False
 
   #-----------------------------------------------
   # categorical variables to transform to numerical variables
@@ -111,7 +113,7 @@ data_pipeline:
     
 ml_pipeline:
   model: tbd
-  verbose: True
+  verbose: False
 
 
 mlflow:

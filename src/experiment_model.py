@@ -10,9 +10,9 @@ from pycaret.internal.pipeline import Pipeline as Pycaret_Pipeline
 from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardScaler, SimpleImputer, MinMaxScaler 
 from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder
 
-from src.conf.di_f_pipe import Di_F_Pipe_Regression_Pycaret_Voating
+from src.conf.di_f_pipeline import Di_F_Pipe_Regression_Pycaret_Voating
 import src.conf.preprocessors as pp
-from src.conf.ml_util import Pycaret_DataPipeline
+from src.conf.di_f_datapipes import Pycaret_DataPipeline
 
 from catboost import CatBoostRegressor
 import pandas as pd

@@ -9,7 +9,7 @@ from pycaret.internal.pipeline import Pipeline as Pycaret_Pipeline
 from pycaret.internal.preprocess.preprocessor import PowerTransformer, StandardScaler, SimpleImputer 
 from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder, MinMaxScaler
 
-from src.conf.di_f_pipe import Di_F_Pipe_Regression_Pytorch_FFNN
+from src.conf.di_f_pipeline import Di_F_Pipe_Regression_Pytorch_FFNN
 import src.conf.preprocessors as pp
 
 from catboost import CatBoostRegressor
@@ -21,8 +21,8 @@ import torch
 import torch.nn as nn
 from collections import OrderedDict
 
-from src.conf.models import Pytorch_FFNN_Regressor
-from src.conf.ml_util import Pycaret_DataPipeline
+from src.conf.di_f_mlpipes import Pytorch_FFNN_Regressor
+from src.conf.di_f_datapipes import Pycaret_DataPipeline
 
 
 # Create an instance of Pycaret Pipeline class:
