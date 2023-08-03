@@ -5,17 +5,20 @@ from omegaconf import DictConfig
 import logging
 
 
-
 di_f_logger = logging.getLogger(__name__)
 di_f_logger.propagate = False  # This is to avoid terminal echo/propagation
-di_f_logger.setLevel(level=logging.INFO)  # From INFO, starting logging CRITICAL -> ERROR -> WARNING -> INFO -> DEBUG
+di_f_logger.setLevel(
+    level=logging.INFO
+)  # From INFO, starting logging CRITICAL -> ERROR -> WARNING -> INFO -> DEBUG
 
-formatter = logging.Formatter('%(asctime)s - %(module)s - %(lineno)d - %(levelname)s - %(message)s')
+formatter = logging.Formatter(
+    "%(asctime)s - %(module)s - %(lineno)d - %(levelname)s - %(message)s"
+)
 
-# This handler is to write to the LOG file  
-#handler = logging.FileHandler(f'{cfg.paths.di_f_pipeline_log_dir}/{cfg.file_names.di_f_pipeline_log}')
-handler = logging.FileHandler('logs/di_f_pipeline.log')
-    
+# This handler is to write to the LOG file
+# handler = logging.FileHandler(f'{cfg.paths.di_f_pipeline_log_dir}/{cfg.file_names.di_f_pipeline_log}')
+handler = logging.FileHandler("logs/di_f_pipeline.log")
+
 handler.setFormatter(formatter)
 di_f_logger.addHandler(handler)
 

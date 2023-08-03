@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from torch.utils.data import Dataset
 
+
 class CustomDataset(Dataset):
     def __init__(self, inputs, labels, transforms=None):
         """
@@ -36,9 +37,11 @@ class CustomDataset(Dataset):
 
         return input_sample, label
 
+
 def normalize_features(inputs, labels):
     inputs = (inputs - torch.mean(inputs, dim=0)) / torch.std(inputs, dim=0)
     return inputs, labels
+
 
 # Sample data (replace this with your actual data)
 inputs = np.random.rand(100, 5)  # Assuming 100 samples with 5 features each

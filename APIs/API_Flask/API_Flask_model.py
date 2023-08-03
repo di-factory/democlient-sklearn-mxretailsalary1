@@ -15,18 +15,16 @@ Swagger(app)
 def load_pred():  # Local function to retrieve prediction model for this API
     experiment = None
     try:
-        experiment = joblib.load('APIs/API_Flask/apiflask_predict.pkl')
+        experiment = joblib.load("APIs/API_Flask/apiflask_predict.pkl")
         print("API flask predict model loaded successfully!")
     except Exception as e:
         print(f"Error loading the predict model: run first save_apiflask_model.py: {e}")
-    
+
     return experiment
 
 
-
-@app.route("/any", methods=['GET'])
+@app.route("/any", methods=["GET"])
 async def welcome():
-    
     """
     Welcome message
     ---
@@ -38,9 +36,8 @@ async def welcome():
 
 
 # Define predict function
-@app.route("/predict", methods=['POST'])
+@app.route("/predict", methods=["POST"])
 async def predict():
-
     """
     Endpoint to predict the target variable using the input data
     ---
@@ -77,9 +74,12 @@ async def predict():
     experiment = load_pred()
     data: MxRetailSalary1.Features = request.json
     input_data = MxRetailSalary1.Features(**data)  # validate and parse
-    data = pd.DataFrame([input_data.dict()], columns=experiment.feature_list)  # convert validated data
+    data = pd.DataFrame(
+        [input_data.dict()], columns=experiment.feature_list
+    )  # convert validated data
     predictions = experiment.predict(data)
     return {"prediction": predictions[0]}
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
