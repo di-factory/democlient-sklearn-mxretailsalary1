@@ -88,13 +88,15 @@ data_fields:
     salary_employee_day
 
 data_pipeline:
-  drop_features: []
-  keep_features: []
-  standarize_text: []
-  str_to_float: []
-  to_categorize: []
-  category_to_num: []
-  onehot_encoding: ['state']
+  level: Pycaret
+  features_engineering:
+    drop_features: []
+    keep_features: []
+    standarize_text: []
+    str_to_float: []
+    to_categorize: []
+    category_to_num: []
+    onehot_encoding: ['state']
   verbose: True
 
   #-----------------------------------------------
@@ -110,9 +112,15 @@ data_pipeline:
     percent_valid: 0.20
     percent_test: 0.10
 
-    
 ml_pipeline:
-  model: tbd
+  modelpipeline: 
+    level2: Regression
+    level3: Pycaret
+    hyperparams:
+      epochs: 5
+      batch_size: 64
+      lr: 0.001
+
   verbose: True
 
 

@@ -32,11 +32,12 @@ import torch.nn as nn
 from collections import OrderedDict
 
 from src.conf.di_f_mlpipes import Pytorch_FFNN_Regressor
-from src.conf.di_f_datapipes import Pytorch_DataPipeline, Pytorch_Pipeline
+from src.conf.di_f_datapipes import Di_F_DataPipeline, Pytorch_Transformer, Pytorch_Normalize_Tx
 
 
 # Create an instance of Pytorch Pipeline class:
-mx_retail_salary1_datapipeline = Pytorch_Pipeline()
+mx_retail_salary1_datapipeline = Pytorch_Transformer([{'id': 'normalize',
+                                                       'transformer': Pytorch_Normalize_Tx},])
 # ... and an instance of model Pycaret Pipeline:
 mx_retail_salary1_mlpipeline = Pytorch_FFNN_Regressor(input_dim=34)
 
@@ -69,7 +70,7 @@ class MxRetailSalary1(Di_F_Pipe_Regression_Pytorch_FFNN):
         }
 
         # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)
-        self.dataPipeline = Pytorch_DataPipeline(cfg, data_pipeline)
+        self.dataPipeline = Di_F_DataPipeline(cfg, data_pipeline)
 
         # and here you define the prediction model
         self.model = ml_pipeline

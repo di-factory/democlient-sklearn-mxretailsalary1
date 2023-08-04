@@ -14,7 +14,7 @@ from pycaret.internal.pipeline import Pipeline
 
 from sklearn.model_selection import cross_val_score, KFold
 
-# from sklearn.metrics import r2_score, mean_absolute_percentage_error, mean_squared_error, make_scorer
+from sklearn.metrics import r2_score, mean_absolute_percentage_error, mean_squared_error, make_scorer
 
 
 # from catboost import CatBoostRegressor
@@ -813,7 +813,7 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
                 sc = score["metric"](y, y_pred)
                 scores_v[score["id"]] += sc
 
-            if (e + 1) % 100 == 0 and verbose:
+            if (e + 1) % 1 == 0 and verbose:
                 di_f_logger.info(f"epoch:{e+1}, loss:{self.losses[e]}")
 
         for score in self.scores:  # geting mean of each metric for each epoch

@@ -36,9 +36,9 @@ class Pytorch_FFNN_Regressor(nn.Module):
         self.layerh2 = nn.Linear(250, 100)
         self.layero = nn.Linear(100, 1)
 
-        self.batch_size = 200
+        self.batch_size = 2
         self.lr = 0.001
-        self.num_epochs = 2000
+        self.num_epochs = 10
         self.loss_func = nn.MSELoss()
         self.optimizer = optim.SGD(self.parameters(), lr=0.01)
 

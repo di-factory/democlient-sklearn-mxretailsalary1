@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 from sklearn.ensemble import GradientBoostingRegressor, VotingRegressor
 from sklearn.linear_model import HuberRegressor, BayesianRidge, Ridge
 
-from pycaret.internal.pipeline import Pipeline as Pycaret_Pipeline
+from pycaret.internal.pipeline import Pipeline as Pycaret_Transformer
 
 from pycaret.internal.preprocess.preprocessor import (
     PowerTransformer,
@@ -22,7 +22,7 @@ from pycaret.internal.preprocess.preprocessor import (
 
 from src.conf.di_f_pipeline import Di_F_Pipe_Regression_Pycaret_Voating
 import src.conf.preprocessors as pp
-from src.conf.di_f_datapipes import Pycaret_DataPipeline
+from src.conf.di_f_datapipes import Di_F_DataPipeline
 
 from catboost import CatBoostRegressor
 import pandas as pd
@@ -30,7 +30,7 @@ from pydantic import BaseModel
 from sklearn.metrics import r2_score, mean_absolute_percentage_error
 
 # Create an instance of Pycaret Pipeline class:
-mx_retail_salary1_datapipeline = Pycaret_Pipeline(
+mx_retail_salary1_datapipeline = Pycaret_Transformer(
     steps=[
         (
             "numerical_imputer",
@@ -105,7 +105,7 @@ mx_retail_salary1_datapipeline = Pycaret_Pipeline(
 )
 
 # ... and an instance of model Pycaret Pipeline:
-mx_retail_salary1_mlpipeline = Pycaret_Pipeline(
+mx_retail_salary1_mlpipeline = Pycaret_Transformer(
     steps=[
         (
             "actual_estimator",
@@ -159,7 +159,7 @@ class MxRetailSalary1(Di_F_Pipe_Regression_Pycaret_Voating):
         }
 
         # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)
-        self.dataPipeline = Pycaret_DataPipeline(cfg, data_pipeline)
+        self.dataPipeline = Di_F_DataPipeline(cfg, data_pipeline)
 
         # and here you define the prediction model
         self.model = ml_pipeline

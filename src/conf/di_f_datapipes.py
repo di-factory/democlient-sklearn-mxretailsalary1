@@ -153,18 +153,45 @@ def normalize(
     return normalize_cols, values
 
 
+class Pytorch_Normalize_Tx():
+    def __init__(self, matrix):
+        self.matrix = matrix
+        self.metadata = []
+            
+    def fit(self, X, y=None):
+        for col in range(self.matrix.shape[1]):
+            dict = {}
+            dict['mean'] = self.matrix[:, col].mean()
+            dict['std'] = self.matrix[:, col].std()
+            self.metadata.append(dict)
+    
+    def transform(self, X):
+        X_result = self.matrix        
+        for col in range(self.matrix.shape[1]):
+            X_result[:,col] = (self.matrix[:, col]-self.metadata[col]['mean'])/self.metadata[col]['std']
+        return X_result
+
 #  Datapipelines clasess
 
 
-class Pytorch_Pipeline:
-    def __init__(self, pipeline: dict = None):
-        pass
+class Pytorch_Transformer:
+    def __init__(self, transformation_map: list = None):
+        self.txmap = transformation_map
 
-    def fit(self, X, y):
-        return X, y
+    def fit(self, X, y=None):
+        if isinstance(X, pd.DataFrame):
+         X = X.values
+        for m in self.txmap:
+            m['transformer'] = m['transformer'](X)
+            m['transformer'].fit(X)
 
     def transform(self, X):
-        return X
+        if isinstance(X, pd.DataFrame):
+            X2 = X.values
+        for m in self.txmap:
+            X2 = m['transformer'].transform(X)
+        return pd.DataFrame(X2, columns=X.columns)
+    
 
 
 class PytorchDataSet(Dataset):
@@ -193,6 +220,7 @@ class PytorchDataSet(Dataset):
         return input_sample, label
 
 
+"""
 class Pytorch_DataPipeline:
     def __init__(self, cfg: DictConfig, data_pipeline: Pycaret_Pipeline = None):
         self.cfg = cfg
@@ -230,10 +258,10 @@ class Pytorch_DataPipeline:
             di_f_logger.info("Datapipeline saved successfully!")
         except Exception as e:
             di_f_logger.info(f"Error saving the datapipeline: {e}")
+"""
 
-
-class Pycaret_DataPipeline:
-    def __init__(self, cfg: DictConfig, data_pipeline: Pycaret_Pipeline = None):
+class Di_F_DataPipeline:
+    def __init__(self, cfg: DictConfig, data_pipeline: Optional[Callable] = None):
         self.cfg = cfg
         self.dataPipeline = data_pipeline
 
