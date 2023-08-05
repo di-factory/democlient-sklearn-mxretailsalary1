@@ -14,7 +14,12 @@ from pycaret.internal.pipeline import Pipeline
 
 from sklearn.model_selection import cross_val_score, KFold
 
-from sklearn.metrics import r2_score, mean_absolute_percentage_error, mean_squared_error, make_scorer
+from sklearn.metrics import (
+    r2_score,
+    mean_absolute_percentage_error,
+    mean_squared_error,
+    make_scorer,
+)
 
 
 # from catboost import CatBoostRegressor
@@ -614,7 +619,7 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
 
         # loading pre-processed data from notebook data profiling
         pathfile_l = os.path.join(
-            self.cfg.paths.interim_data_dir, self.cfg.file_names.data_file
+            self.cfg.paths.processed_data_dir, self.cfg.file_names.processed_data
         )
         data = di_f_datapipes.load_data(
             pathfile_l,
@@ -639,7 +644,7 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         data = self.dataPipeline.transform(
             features
         )  # transformations is making on features
-        data[self.cfg.data_fields.label] = labels  # adding column labels to dataframe
+        data[self.cfg.data_fields.label] = np.log1p(labels)  # adding column labels to dataframe
 
         if verbose:
             print(f"runDataPipeline(): After transformation: (rows,cols) {data.shape}")

@@ -152,23 +152,98 @@ def normalize(
         normalize_cols[col] = {"mean": mean, "max_val": std}
     return normalize_cols, values
 
-
-class Pytorch_Normalize_Tx():
-    def __init__(self, matrix):
-        self.matrix = matrix
+class Pytorch_Categorical_to_num:
+    def __init__(self):
         self.metadata = []
-            
-    def fit(self, X, y=None):
-        for col in range(self.matrix.shape[1]):
-            dict = {}
-            dict['mean'] = self.matrix[:, col].mean()
-            dict['std'] = self.matrix[:, col].std()
-            self.metadata.append(dict)
     
+    def fit(self, X, y=None):
+
+        for col in range(X.shape[1]):
+            dict = {}
+            dict['col'] = col
+            dict['value_range']={}
+            for num, val in enumerate(np.unique(X[:, col])):
+                dict['value_range'][val]=num
+            self.metadata.append(dict)
+            print(dict)
+                    
     def transform(self, X):
-        X_result = self.matrix        
-        for col in range(self.matrix.shape[1]):
-            X_result[:,col] = (self.matrix[:, col]-self.metadata[col]['mean'])/self.metadata[col]['std']
+        X_result = X.copy()  # Make a copy of the input to avoid modifying it directly
+        for r in range(X.shape[0]):
+            for c in self.metadata:
+              X_result[r,c['col']] = c['value_range'][X[r,c['col']]]
+        return X_result 
+    
+class Pytorch_MinMax_Tx:
+    def __init__(self):
+        self.metadata = []
+
+    def fit(self, X, y=None):
+        for col in range(X.shape[1]):
+            dict = {}
+            dict["min"] = X[:, col].astype(float).min()
+            dict["max"] = X[:, col].astype(float).max()
+            self.metadata.append(dict)
+
+    def transform(self, X):
+        X_result = X.astype(float)
+        for col in range(X.shape[1]):
+            X_result[:, col] = (X[:, col].astype(float) - self.metadata[col]['min']) / (self.metadata[col]['max'] - self.metadata[col]['min'])
+        return X_result    
+        
+class Pytorch_Normalize_Tx:
+    def __init__(self):
+        self.metadata = []
+
+    def fit(self, X, y=None):
+        print(X)
+        for col in range(X.shape[1]):
+            dict = {}
+            dict["mean"] = X[:, col].astype(float).mean()
+            dict["std"] = X[:, col].astype(float).std()
+            self.metadata.append(dict)
+
+    def transform(self, X):
+        X_result = X.astype(float)
+        for col in range(X.shape[1]):
+            X_result[:, col] = (
+                X[:, col].astype(float) - self.metadata[col]["mean"]
+            ) / self.metadata[col]["std"]
+        return X_result
+
+class Pytorch_OneHot_Tx:
+    def __init__(self):
+        self.metadata = []
+    
+    def fit(self, X, y=None):
+
+        for col in range(X.shape[1]):
+            dict = {}
+            dict['col'] = col
+            dict['value_range']={}
+            for num, val in enumerate(np.unique(X[:, col])):
+                dict['value_range'][val]=num
+            self.metadata.append(dict)
+            print(dict)
+                    
+    def transform(self, X):
+        num_columns = sum(len(col['value_range']) for col in self.metadata)
+        X_result = np.zeros((X.shape[0], num_columns))  # Initialize the result matrix
+        
+        current_col = 0
+        for col_metadata in self.metadata:
+            col = col_metadata['col']
+            col_mapping = col_metadata['value_range']
+            
+            for r in range(X.shape[0]):
+                value = X[r, col]
+                value_index = col_mapping.get(value, -1)  # Get the index from the mapping
+                
+                if value_index != -1:  # If value exists in mapping
+                    X_result[r, current_col + value_index] = 1  # Set the corresponding value to 1
+            
+            current_col += len(col_mapping)  # Move to the next set of columns
+        
         return X_result
 
 #  Datapipelines clasess
@@ -180,18 +255,29 @@ class Pytorch_Transformer:
 
     def fit(self, X, y=None):
         if isinstance(X, pd.DataFrame):
-         X = X.values
+            X = X.values
         for m in self.txmap:
-            m['transformer'] = m['transformer'](X)
-            m['transformer'].fit(X)
+            m["transformer"] = m["transformer"]()
+            fields = m["fields"]
+            m["transformer"].fit(X[:,fields])
 
     def transform(self, X):
+        
         if isinstance(X, pd.DataFrame):
-            X2 = X.values
-        for m in self.txmap:
-            X2 = m['transformer'].transform(X)
-        return pd.DataFrame(X2, columns=X.columns)
-    
+            columns = X.columns
+            X = X.values
+            
+        for i, m in enumerate(self.txmap):
+
+            transformed = m["transformer"].transform(X[:,m["fields"]])
+            print(transformed.shape)
+            if not i:
+                Xnew = transformed
+            else:
+                Xnew = np.hstack((Xnew, transformed))
+ 
+            print('i, xnew:', i, Xnew.shape)
+        return pd.DataFrame(Xnew)
 
 
 class PytorchDataSet(Dataset):
@@ -219,46 +305,6 @@ class PytorchDataSet(Dataset):
 
         return input_sample, label
 
-
-"""
-class Pytorch_DataPipeline:
-    def __init__(self, cfg: DictConfig, data_pipeline: Pycaret_Pipeline = None):
-        self.cfg = cfg
-        self.dataPipeline = data_pipeline
-
-    def fit(self, X, y):
-        self.dataPipeline.fit(X, y)
-
-    def transform(self, X):
-        return self.dataPipeline.transform(X)
-
-    def load_dataPipeline(
-        self,
-    ) -> (
-        None
-    ):  # this method loads the dataPipeline model that was created/saved in runDataPipeline()
-        try:
-            self.dataPipeline = joblib.load(
-                os.path.join(
-                    self.cfg.paths.models_dir, self.cfg.file_names.datapipeline
-                )
-            )
-            di_f_logger.info("datapipeline loaded successfully!")
-        except Exception as e:
-            di_f_logger.info(f"Error loading the datapipeline: {e}")
-
-    def save_dataPipeline(self) -> None:  # this method saves the dataPipeline model
-        try:
-            joblib.dump(
-                self.dataPipeline,
-                os.path.join(
-                    self.cfg.paths.models_dir, self.cfg.file_names.datapipeline
-                ),
-            )
-            di_f_logger.info("Datapipeline saved successfully!")
-        except Exception as e:
-            di_f_logger.info(f"Error saving the datapipeline: {e}")
-"""
 
 class Di_F_DataPipeline:
     def __init__(self, cfg: DictConfig, data_pipeline: Optional[Callable] = None):

@@ -32,12 +32,21 @@ import torch.nn as nn
 from collections import OrderedDict
 
 from src.conf.di_f_mlpipes import Pytorch_FFNN_Regressor
-from src.conf.di_f_datapipes import Di_F_DataPipeline, Pytorch_Transformer, Pytorch_Normalize_Tx
+from src.conf.di_f_datapipes import (
+    Di_F_DataPipeline,
+    Pytorch_Transformer,
+    Pytorch_MinMax_Tx,
+    Pytorch_OneHot_Tx
+)
 
 
 # Create an instance of Pytorch Pipeline class:
-mx_retail_salary1_datapipeline = Pytorch_Transformer([{'id': 'normalize',
-                                                       'transformer': Pytorch_Normalize_Tx},])
+mx_retail_salary1_datapipeline = Pytorch_Transformer(
+    [
+        {"id": "one-hot", "transformer": Pytorch_OneHot_Tx, 'fields': [0]},
+        {"id": "Min", "transformer": Pytorch_MinMax_Tx, 'fields': [1, 2]},
+    ]
+)
 # ... and an instance of model Pycaret Pipeline:
 mx_retail_salary1_mlpipeline = Pytorch_FFNN_Regressor(input_dim=34)
 
