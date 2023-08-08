@@ -36,15 +36,15 @@ from src.conf.di_f_datapipes import (
     Di_F_DataPipeline,
     Pytorch_Transformer,
     Pytorch_MinMax_Tx,
-    Pytorch_OneHot_Tx
+    Pytorch_OneHot_Tx,
 )
 
 
 # Create an instance of Pytorch Pipeline class:
 mx_retail_salary1_datapipeline = Pytorch_Transformer(
     [
-        {"id": "one-hot", "transformer": Pytorch_OneHot_Tx, 'fields': [0]},
-        {"id": "Min", "transformer": Pytorch_MinMax_Tx, 'fields': [1, 2]},
+        {"id": "one-hot", "transformer": Pytorch_OneHot_Tx, "fields": [0]},
+        {"id": "Min", "transformer": Pytorch_MinMax_Tx, "fields": [1, 2]},
     ]
 )
 # ... and an instance of model Pycaret Pipeline:

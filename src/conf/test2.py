@@ -1,11 +1,7 @@
 import numpy as np
 
-    
-m = np.array([
-        ['A', 'Z', 2, 3],
-        ['B', 'Y', 3, 4],
-        ['C', 'X', 6, 7]
-    ])
+
+m = np.array([["A", "Z", 2, 3], ["B", "Y", 3, 4], ["C", "X", 6, 7]])
 
 selec = [2]
 

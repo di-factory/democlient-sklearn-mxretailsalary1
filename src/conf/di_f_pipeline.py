@@ -12,7 +12,7 @@ from pycaret.internal.pipeline import Pipeline
 # from pycaret.internal.preprocess.preprocessor import FixImbalancer, TransformerWrapper, TargetEncoder, OneHotEncoder, MinMaxScaler
 
 
-from sklearn.model_selection import cross_val_score, KFold
+from sklearn.model_selection import cross_val_score, KFold, train_test_split
 
 from sklearn.metrics import (
     r2_score,
@@ -245,34 +245,80 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
             # encoding=<particular encoding>
         )
 
+        # Sppliting the data
+
+        train_data, test_data = train_test_split(
+            data,
+            test_size=self.cfg.data_pipeline.data_transform_params.percent_test,
+            random_state=self.cfg.general_ml.seed,
+        )
+        train_data, val_data = train_test_split(
+            train_data,
+            test_size=self.cfg.data_pipeline.data_transform_params.percent_valid,
+            random_state=self.cfg.general_ml.seed,
+        )
+
+        # executing trainning transformation
+        result["initial_trainning_shape"] = train_data.shape
+        if verbose:
+            di_f_logger.info("runDataPipeline(): Transforming train data init")
+
+        train_labels = train_data[self.cfg.data_fields.label]
+        self.dataPipeline.fit(
+            train_data[self.feature_list], train_labels
+        )  # only fitting features, no label
+
+        train_data = self.dataPipeline.transform(
+            train_data[self.feature_list]
+        )  # transformations is making on features
+
+        if verbose:
+            di_f_logger.info(
+                f"runDataPipeline(): After train transformation: (rows,cols) {train_data.shape}"
+            )
+        result["final_train_data_shape"] = train_data.shape
+
+        # executing validation transformation
+        result["initial_validation_data_shape"] = val_data.shape
+        if verbose:
+            di_f_logger.info("runDataPipeline(): Transforming validation data init")
+
+        val_labels = val_data[self.cfg.data_fields.label]
+
+        val_data = self.dataPipeline.transform(
+            val_data[self.feature_list]
+        )  # transformations is making on features
+
+        if verbose:
+            di_f_logger.info(
+                f"runDataPipeline(): After val data transformation: (rows,cols) {val_data.shape}"
+            )
+        result["final_validation_data_shape"] = val_data.shape
+
+        # executing testing (unseen) data transformation
+        result["initial testing_data_shape"] = test_data.shape
+        if verbose:
+            di_f_logger.info("runDataPipeline(): Transforming testing data init")
+
+        test_labels = test_data[self.cfg.data_fields.label]
+
+        test_data = self.dataPipeline.transform(
+            test_data[self.feature_list]
+        )  # transformations is making on features
+
+        if verbose:
+            di_f_logger.info(
+                f"runDataPipeline(): After test data transformation: (rows,cols) {test_data.shape}"
+            )
+        result["final_test_data_shape"] = test_data.shape
+
         # setting the directory where to save transformed data
         pathfile_s = os.path.join(
             self.cfg.paths.interim_data_dir, self.cfg.file_names.data_file
         )
 
-        # executing transformation
-        result["initial_shape"] = data.shape
-
-        if verbose:
-            di_f_logger.info("runDataPipeline(): Transforming data init")
-
-        labels = data[self.cfg.data_fields.label]
-        self.dataPipeline.fit(
-            data[self.feature_list], labels
-        )  # only fitting features, no label
-        data = self.dataPipeline.transform(
-            data[self.feature_list]
-        )  # transformations is making on features
-        data[self.cfg.data_fields.label] = labels  # adding column labels to dataframe
-
-        if verbose:
-            di_f_logger.info(
-                f"runDataPipeline(): After transformation: (rows,cols) {data.shape}"
-            )
-
-        result["final_shape"] = data.shape
-
         # write the whole transformed data
+        data = pd.concat([train_data, val_data, test_data], axis=0)
         di_f_datapipes.write_transformed(pathfile_s, data, verbose=verbose)
 
         # setting paths where to save splitted data
@@ -303,11 +349,12 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
             pathfile_validation_labels,
             pathfile_test_futures,
             pathfile_test_labels,
-            data,
-            self.cfg.data_fields.label,
-            self.cfg.data_pipeline.data_transform_params.percent_valid,
-            self.cfg.data_pipeline.data_transform_params.percent_test,
-            self.cfg.general_ml.seed,
+            train_data,
+            train_labels,
+            val_data,
+            val_labels,
+            test_data,
+            test_labels,
             verbose=verbose,
         )
 
@@ -644,305 +691,7 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         data = self.dataPipeline.transform(
             features
         )  # transformations is making on features
-        data[self.cfg.data_fields.label] = np.log1p(labels)  # adding column labels to dataframe
-
-        if verbose:
-            print(f"runDataPipeline(): After transformation: (rows,cols) {data.shape}")
-
-        result["final_shape"] = data.shape
-
-        # write the whole transformed data
-        di_f_datapipes.write_transformed(pathfile_s, data, verbose=verbose)
-
-        # setting paths where to save splitted data
-        pathfile_train_futures = os.path.join(
-            self.cfg.paths.processed_data_dir, self.cfg.file_names.train_features
-        )
-        pathfile_train_labels = os.path.join(
-            self.cfg.paths.processed_data_dir, self.cfg.file_names.train_labels
-        )
-        pathfile_validation_futures = os.path.join(
-            self.cfg.paths.processed_data_dir, self.cfg.file_names.validation_features
-        )
-        pathfile_validation_labels = os.path.join(
-            self.cfg.paths.processed_data_dir, self.cfg.file_names.validation_labels
-        )
-        pathfile_test_futures = os.path.join(
-            self.cfg.paths.processed_data_dir, self.cfg.file_names.test_features
-        )
-        pathfile_test_labels = os.path.join(
-            self.cfg.paths.processed_data_dir, self.cfg.file_names.test_labels
-        )
-
-        # executting and writting spplited data
-        di_f_datapipes.write_spplited(
-            pathfile_train_futures,
-            pathfile_train_labels,
-            pathfile_validation_futures,
-            pathfile_validation_labels,
-            pathfile_test_futures,
-            pathfile_test_labels,
-            data,
-            self.cfg.data_fields.label,
-            self.cfg.data_pipeline.data_transform_params.percent_valid,
-            self.cfg.data_pipeline.data_transform_params.percent_test,
-            self.cfg.general_ml.seed,
-            verbose=verbose,
-        )
-
-        # save data pipeline model
-        self.dataPipeline.save_dataPipeline()
-        return result
-
-    def fit(
-        self, tracking: bool = False
-    ) -> dict:  # this methods train the model prediction defined.
-        # Load the data
-        train_features = pd.read_csv(
-            os.path.join(
-                self.cfg.paths.processed_data_dir, self.cfg.file_names.train_features
-            )
-        )
-        train_labels = pd.read_csv(
-            os.path.join(
-                self.cfg.paths.processed_data_dir, self.cfg.file_names.train_labels
-            )
-        )
-        validation_features = pd.read_csv(
-            os.path.join(
-                self.cfg.paths.processed_data_dir,
-                self.cfg.file_names.validation_features,
-            )
-        )
-        validation_labels = pd.read_csv(
-            os.path.join(
-                self.cfg.paths.processed_data_dir, self.cfg.file_names.validation_labels
-            )
-        )
-        test_features = pd.read_csv(
-            os.path.join(
-                self.cfg.paths.processed_data_dir, self.cfg.file_names.test_features
-            )
-        )
-        test_labels = pd.read_csv(
-            os.path.join(
-                self.cfg.paths.processed_data_dir, self.cfg.file_names.test_labels
-            )
-        )
-
-        # Set variable verbose to activate prints in function
-        verbose = self.cfg.ml_pipeline.verbose
-
-        # changing from datasets to tensors
-        train_features = torch.tensor(train_features.values, dtype=torch.float)
-        train_labels = torch.log(
-            torch.tensor(train_labels.values, dtype=torch.float)
-        )  # scaling to log the labels
-        validation_features = torch.tensor(
-            validation_features.values, dtype=torch.float
-        )
-        validation_labels = torch.log(
-            torch.tensor(validation_labels.values, dtype=torch.float)
-        )  # scaling to log the labels
-        test_features = torch.tensor(test_features.values, dtype=torch.float)
-        test_labels = torch.log(
-            torch.tensor(test_labels.values, dtype=torch.float)
-        )  # scaling to log the labels
-
-        # creating datasets and dataloaders
-        train_data = TensorDataset(train_features, train_labels)
-        validation_data = TensorDataset(validation_features, validation_labels)
-
-        train_loader = DataLoader(
-            train_data, batch_size=self.model.batch_size, shuffle=True, drop_last=True
-        )
-        validation_loader = DataLoader(
-            validation_data,
-            batch_size=self.model.batch_size,
-            shuffle=True,
-            drop_last=True,
-        )
-
-        if tracking:
-            # setting up mlflow
-            mlflow.set_tracking_uri(self.cfg.mlflow.tracking_uri)
-            mlflow.set_experiment(
-                f"{self.cfg.mlflow.tracking_experiment_name}_{self.di_f_exp}"
-            )
-            mlflow.sklearn.autolog()
-            mlflow.start_run()
-
-        # Fit the model
-        if verbose:
-            di_f_logger.info("fitting the  model")
-            di_f_logger.info(
-                f"dimensions: features-> {train_features.shape}, labels-> {train_labels.shape}"
-            )
-
-        # Initializing dict results, scores and scores_v
-        results = {}
-        scores = []
-
-        scores_v = {}  # this dict is to grab the different metrics
-        for score in self.scores:  # Initializing vectors to cumpute scores in each fold
-            scores_v[score["id"]] = 0
-
-        self.losses = torch.zeros(
-            self.model.num_epochs
-        )  # To grab the loss_train for each epoch an see evolution
-
-        for e in range(self.model.num_epochs):
-            # switching to train mode
-            self.model.train()
-            batch_loss = []  # To grab the loss_train for each batch and then get mean()
-            for X, y in train_loader:  # steping by each pair X,y of size batch_size
-                y_pred = self.model.forward(X)
-
-                loss = self.model.loss_func(y_pred, y)
-
-                # backpropagation block
-                self.model.optimizer.zero_grad()  # reinit gradients
-                loss.backward()
-                self.model.optimizer.step()
-                batch_loss.append(loss.item())
-
-            self.losses[e] = np.mean(batch_loss)
-
-            # let's evaluate:
-            self.model.eval()
-            X, y = next(iter(validation_loader))
-            with torch.no_grad():  # stop gradient descent in eval)
-                y_pred = self.model.forward(X)
-
-            for score in self.scores:  # Adding each metric for each epoch
-                sc = score["metric"](y, y_pred)
-                scores_v[score["id"]] += sc
-
-            if (e + 1) % 1 == 0 and verbose:
-                di_f_logger.info(f"epoch:{e+1}, loss:{self.losses[e]}")
-
-        for score in self.scores:  # geting mean of each metric for each epoch
-            scores.append((score["id"], scores_v[score["id"]] / self.model.num_epochs))
-        results["train"] = scores
-
-        # Claculating metrics for testing
-        self.model.eval()
-        scores = []
-        y_pred = self.model.forward(test_features)
-        if verbose:
-            di_f_logger.info("scores for test:")
-        for score in self.scores:
-            sc = score["metric"](test_labels.detach().numpy(), y_pred.detach().numpy())
-            scores.append((score["id"], sc))
-            if verbose:
-                di_f_logger.info(f"test scoring {score['id']}: {sc}")
-        results["test"] = scores
-
-        # saving the model
-        self.save_model()
-
-        if tracking:
-            # stoping mlflow run experiment
-            mlflow.end_run()
-
-        return results
-
-    def fit_Kfold(
-        self, tracking: bool = False
-    ) -> dict:  # this method use Crossvalidations in trainning
-        pass
-
-    def predict(
-        self, X: pd.DataFrame
-    ) -> np.array:  # this method makes predictions of unseen incomig data
-        di_f_logger.info(f"Loading data pipeline and ml pipeline trainned models")
-
-        self.dataPipeline.load_dataPipeline()
-        self.load_model()
-
-        di_f_logger.info(f"predicting a vector of {X.shape}")
-
-        X_transformed = self.dataPipeline.transform(X)
-
-        result = self.model.forward(
-            torch.tensor(X_transformed.values, dtype=torch.float)
-        )
-        result = torch.exp(result).detach().numpy()
-
-        return np.array(result)
-
-    def evaluate(
-        self,
-    ) -> (
-        dict
-    ):  # this method evaluate the tarinned model with unseen data of test dataset.
-        pass
-
-
-class Di_F_Pipe_Regression_Pytorch2(Di_F_Pipe_Regression):
-    def __init__(self, cfg: DictConfig):
-        super().__init__(cfg)
-        self.di_fx.append("Pytorch")  # Level 1 class of the experiment
-
-    def load_model(
-        self,
-    ) -> (
-        None
-    ):  # this method loads the model prediction that was created/saved in fits methods
-        try:
-            self.model.load_state_dict(
-                torch.load(
-                    os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model)
-                )
-            )
-            di_f_logger.info("model loaded successfully!")
-        except Exception as e:
-            di_f_logger.info(f"Error loading the model: {e}")
-
-    def save_model(self) -> None:  # this method saves the model prediction
-        try:
-            torch.save(
-                self.model.state_dict(),
-                os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model),
-            )
-            di_f_logger.info("model saved successfully!")
-        except Exception as e:
-            di_f_logger.info(f"Error saving the model: {e}")
-
-    def runDataPipeline(self) -> dict:  # this method runs the dataPipeline object-class
-        result = {}  # To grab results
-
-        # Set variable verbose to activate prints in function
-        verbose = self.cfg.data_pipeline.verbose
-
-        # loading pre-processed data from notebook data profiling
-        pathfile_l = os.path.join(
-            self.cfg.paths.processed_data_dir, self.cfg.file_names.processed_data
-        )
-        data = di_f_datapipes.load_data(
-            pathfile_l,
-            verbose=verbose
-            # encoding=<particular encoding>
-        )
-
-        # setting the directory where to save transformed data
-        pathfile_s = os.path.join(
-            self.cfg.paths.interim_data_dir, self.cfg.file_names.data_file
-        )
-
-        # executing transformation
-        result["initial_shape"] = data.shape
-
-        if verbose:
-            print("runDataPipeline(): Transforming data init")
-
-        labels = data[self.cfg.data_fields.label]
-        self.dataPipeline.fit(
-            data[self.feature_list], labels
-        )  # only fitting features, no label
-        data = self.dataPipeline.transform(
-            data[self.feature_list]
-        )  # transformations is making on features
+        print(data.shape)
         data[self.cfg.data_fields.label] = labels  # adding column labels to dataframe
 
         if verbose:
@@ -996,6 +745,8 @@ class Di_F_Pipe_Regression_Pytorch2(Di_F_Pipe_Regression):
     def fit(
         self, tracking: bool = False
     ) -> dict:  # this methods train the model prediction defined.
+    
+    
         # Load the data
         train_features = pd.read_csv(
             os.path.join(
@@ -1007,6 +758,7 @@ class Di_F_Pipe_Regression_Pytorch2(Di_F_Pipe_Regression):
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.train_labels
             )
         )
+
         validation_features = pd.read_csv(
             os.path.join(
                 self.cfg.paths.processed_data_dir,
@@ -1018,6 +770,7 @@ class Di_F_Pipe_Regression_Pytorch2(Di_F_Pipe_Regression):
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.validation_labels
             )
         )
+
         test_features = pd.read_csv(
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.test_features
@@ -1028,6 +781,7 @@ class Di_F_Pipe_Regression_Pytorch2(Di_F_Pipe_Regression):
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.test_labels
             )
         )
+
 
         # Set variable verbose to activate prints in function
         verbose = self.cfg.ml_pipeline.verbose
@@ -1080,11 +834,13 @@ class Di_F_Pipe_Regression_Pytorch2(Di_F_Pipe_Regression):
 
         # Initializing dict results, scores and scores_v
         results = {}
-        scores = []
 
-        scores_v = {}  # this dict is to grab the different metrics
+        scores_v = {}  # this dict is to grab the different validation metrics
+        scores_t = {}  # this dict is to grab the different testing metrics
+
         for score in self.scores:  # Initializing vectors to cumpute scores in each fold
             scores_v[score["id"]] = 0
+            scores_t[score["id"]] = 0
 
         self.losses = torch.zeros(
             self.model.num_epochs
@@ -1094,6 +850,7 @@ class Di_F_Pipe_Regression_Pytorch2(Di_F_Pipe_Regression):
             # switching to train mode
             self.model.train()
             batch_loss = []  # To grab the loss_train for each batch and then get mean()
+
             for X, y in train_loader:  # steping by each pair X,y of size batch_size
                 y_pred = self.model.forward(X)
 
@@ -1105,24 +862,46 @@ class Di_F_Pipe_Regression_Pytorch2(Di_F_Pipe_Regression):
                 self.model.optimizer.step()
                 batch_loss.append(loss.item())
 
-            self.losses[e] = np.mean(batch_loss)
+                for score in self.scores:  # Adding each metric for each epoch
+                    sc = score["metric"](y, y_pred.detach().numpy())
+                    scores_t[score["id"]] += sc
 
+            self.losses[e] = np.mean(batch_loss)
+            """
+            for score in self.scores:  # geting mean of each metric for each epoch
+                scores.append((score["id"], scores_t[score["id"]] / self.model.num_epochs))
+                results["train"] = scores
+            """
             # let's evaluate:
             self.model.eval()
-            X, y = next(iter(validation_loader))
+
+            X, y = next(iter(validation_loader))  # Get the validation set in one step
+
             with torch.no_grad():  # stop gradient descent in eval)
                 y_pred = self.model.forward(X)
 
-            for score in self.scores:  # Adding each metric for each epoch
-                sc = score["metric"](y, y_pred)
-                scores_v[score["id"]] += sc
+                for score in self.scores:  # Adding each metric for each epoch
+                    sc = score["metric"](y, y_pred)
+                    scores_v[score["id"]] += sc
 
-            if (e + 1) % 100 == 0 and verbose:
-                di_f_logger.info(f"epoch:{e+1}, loss:{self.losses[e]}")
+                if (e + 1) % 100 == 0 and verbose:
+                    di_f_logger.info(f"epoch:{e+1}, loss:{self.losses[e]}")
 
+        scores = []
+        print(len(train_loader))
+        for score in self.scores:  # geting mean of each metric for each epoch
+            scores.append(
+                (
+                    score["id"],
+                    scores_t[score["id"]] / (self.model.num_epochs * len(train_loader)),
+                )
+            )
+        results["trainning"] = scores
+
+        scores = []
         for score in self.scores:  # geting mean of each metric for each epoch
             scores.append((score["id"], scores_v[score["id"]] / self.model.num_epochs))
-        results["train"] = scores
+        results["validation"] = scores
 
         # Claculating metrics for testing
         self.model.eval()
