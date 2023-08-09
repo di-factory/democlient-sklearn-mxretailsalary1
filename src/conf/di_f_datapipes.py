@@ -31,32 +31,26 @@ from torch.utils.data import Dataset
 import joblib
 
 
-def load_data(
-    pathfile: os.path, encoding: str = "", verbose: bool = False
-) -> pd.DataFrame:
+def load_data(pathfile: os.path, encoding: str = "") -> pd.DataFrame:
     """
     to load data from raw directory and return a dataframe
     """
-    if verbose:
-        di_f_logger.info(f"load_data(): loading raw data...@ {pathfile}")
+    di_f_logger.info(f"load_data(): loading raw data...@ {pathfile}")
+
     df = pd.read_csv(pathfile, encoding=encoding)
-    if verbose:
-        di_f_logger.info(f"        Were loaded: (rows,cols) {df.shape}")
+
+    di_f_logger.info(f"        Were loaded: (rows,cols) {df.shape}")
+
     return df
 
 
-def write_transformed(
-    pathfile: os.path, data: pd.DataFrame, verbose: bool = False
-) -> None:
+def write_transformed(pathfile: os.path, data: pd.DataFrame) -> None:
     """
     saving transformed data in file
     """
-
     data.to_csv(pathfile, index=False)
-    if verbose:
-        di_f_logger.info(f"write_transformed(): File were created @ {pathfile}")
-        # print( '------------------------------------------------------')
-        # print( '------------------------------------------------------')
+
+    di_f_logger.info(f"write_transformed(): File were created @ {pathfile}")
 
 
 def write_spplited(
@@ -72,7 +66,6 @@ def write_spplited(
     val_labels: pd.DataFrame,
     test_data: pd.DataFrame,
     test_labels: pd.DataFrame,
-    verbose: bool = False,
 ) -> None:
     """
     splitting and writting six types of files: train futures & labels where trainning will be done;
@@ -93,19 +86,17 @@ def write_spplited(
     test_data.to_csv(pathfile_test_features, index=None)
     test_labels.to_csv(pathfile_test_labels, index=None)
 
-
-    if verbose:
-        di_f_logger.info(
-            f"write_spplited(): Spplited data saved @ {pathfile_train_features}"
-        )
-        di_f_logger.info(f"                             {pathfile_train_labels}")
-        di_f_logger.info(f"                             {pathfile_validation_features}")
-        di_f_logger.info(f"                             {pathfile_validation_labels}")
-        di_f_logger.info(f"                             {pathfile_test_features}")
-        di_f_logger.info(f"                             {pathfile_test_labels}")
+    di_f_logger.info(
+        f"write_spplited(): Spplited data saved @ {pathfile_train_features}"
+    )
+    di_f_logger.info(f"                             {pathfile_train_labels}")
+    di_f_logger.info(f"                             {pathfile_validation_features}")
+    di_f_logger.info(f"                             {pathfile_validation_labels}")
+    di_f_logger.info(f"                             {pathfile_test_features}")
+    di_f_logger.info(f"                             {pathfile_test_labels}")
 
 
-# Transformers:
+# Neutral Transformers:
 
 
 def minmax(
@@ -133,7 +124,7 @@ def normalize(
     return normalize_cols, values
 
 
-class Pytorch_Categorical_to_num:
+class Di_F_Transform_Categorical_to_num:
     def __init__(self):
         self.metadata = []
 
@@ -145,17 +136,20 @@ class Pytorch_Categorical_to_num:
             for num, val in enumerate(np.unique(X[:, col])):
                 dict["value_range"][val] = num
             self.metadata.append(dict)
-            print(dict)
+        di_f_logger.info(f"fitting Categorical to Num Transformer {dict}")
 
     def transform(self, X):
         X_result = X.copy()  # Make a copy of the input to avoid modifying it directly
         for r in range(X.shape[0]):
             for c in self.metadata:
                 X_result[r, c["col"]] = c["value_range"][X[r, c["col"]]]
+        di_f_logger.info(
+            f"fTransformed Categorical to Num Transformer shape result: {X_result.shape}"
+        )
         return X_result
 
 
-class Pytorch_MinMax_Tx:
+class DI_F_Transform_MinMax:
     def __init__(self):
         self.metadata = []
 
@@ -165,6 +159,7 @@ class Pytorch_MinMax_Tx:
             dict["min"] = X[:, col].astype(float).min()
             dict["max"] = X[:, col].astype(float).max()
             self.metadata.append(dict)
+        di_f_logger.info(f"fitting MinMax Transformer {dict}")
 
     def transform(self, X):
         X_result = X.astype(float)
@@ -172,10 +167,13 @@ class Pytorch_MinMax_Tx:
             X_result[:, col] = (X[:, col].astype(float) - self.metadata[col]["min"]) / (
                 self.metadata[col]["max"] - self.metadata[col]["min"]
             )
+        di_f_logger.info(
+            f"fTransformed MinMax Transformer shape result: {X_result.shape}"
+        )
         return X_result
 
 
-class Pytorch_Normalize_Tx:
+class Di_F_Transform_Normalize:
     def __init__(self):
         self.metadata = []
 
@@ -186,6 +184,7 @@ class Pytorch_Normalize_Tx:
             dict["mean"] = X[:, col].astype(float).mean()
             dict["std"] = X[:, col].astype(float).std()
             self.metadata.append(dict)
+        di_f_logger.info(f"fitting Normalize Transformer {dict}")
 
     def transform(self, X):
         X_result = X.astype(float)
@@ -193,10 +192,13 @@ class Pytorch_Normalize_Tx:
             X_result[:, col] = (
                 X[:, col].astype(float) - self.metadata[col]["mean"]
             ) / self.metadata[col]["std"]
+        di_f_logger.info(
+            f"fTransformed Normalize Transformer shape result: {X_result.shape}"
+        )
         return X_result
 
 
-class Pytorch_OneHot_Tx:
+class Di_F_Transform_OneHot:
     def __init__(self):
         self.metadata = []
 
@@ -208,7 +210,7 @@ class Pytorch_OneHot_Tx:
             for num, val in enumerate(np.unique(X[:, col])):
                 dict["value_range"][val] = num
             self.metadata.append(dict)
-            print(dict)
+        di_f_logger.info(f"fitting Onehot Transformer {dict}")
 
     def transform(self, X):
         num_columns = sum(len(col["value_range"]) for col in self.metadata)
@@ -231,14 +233,16 @@ class Pytorch_OneHot_Tx:
                     ] = 1  # Set the corresponding value to 1
 
             current_col += len(col_mapping)  # Move to the next set of columns
-
+        di_f_logger.info(
+            f"Transformed OneHot Transformer shape result: {X_result.shape}"
+        )
         return X_result
 
 
 #  Datapipelines clasess
 
 
-class Pytorch_Transformer:
+class Di_F_Transformer:
     def __init__(self, transformation_map: list = None):
         self.txmap = transformation_map
 
@@ -252,29 +256,26 @@ class Pytorch_Transformer:
 
     def transform(self, X):
         if isinstance(X, pd.DataFrame):
-            columns = X.columns
             X = X.values
 
         for i, m in enumerate(self.txmap):
             transformed = m["transformer"].transform(X[:, m["fields"]])
-            print(transformed.shape)
             if not i:
                 Xnew = transformed
             else:
                 Xnew = np.hstack((Xnew, transformed))
 
-            print("i, xnew:", i, Xnew.shape)
         return pd.DataFrame(Xnew)
 
 
 class PytorchDataSet(Dataset):
-    def __init__(self, X, y, transforms: Optional[Callable]):
+    def __init__(self, X, y, transforms: Optional[Callable] = None):
         self.X = X
         self.y = y
         self.transforms = transforms
 
     def __len__(self):
-        return len(self.inputs)
+        return len(self.X)
 
     def __getitem__(self, idx):
         # Get the sample at the specified index

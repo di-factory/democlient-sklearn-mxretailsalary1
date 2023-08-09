@@ -23,6 +23,7 @@ handler.setFormatter(formatter)
 di_f_logger.addHandler(handler)
 
 # And this one is to echo on screen
+# comment folowing lines if don't want to output on screen
 handler2 = logging.StreamHandler()
 handler2.setFormatter(formatter)
 di_f_logger.addHandler(handler2)

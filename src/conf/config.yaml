@@ -97,7 +97,7 @@ data_pipeline:
     to_categorize: []
     category_to_num: []
     onehot_encoding: ['state']
-  verbose: True
+  verbose: False
 
   #-----------------------------------------------
   # categorical variables to transform to numerical variables
@@ -123,7 +123,7 @@ ml_pipeline:
       optimizers: [Adam, ] 
       loss_func : 
 
-  verbose: True
+  verbose: False
 
 
 mlflow:

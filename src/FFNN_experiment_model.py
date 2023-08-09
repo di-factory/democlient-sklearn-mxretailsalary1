@@ -34,17 +34,17 @@ from collections import OrderedDict
 from src.conf.di_f_mlpipes import Pytorch_FFNN_Regressor
 from src.conf.di_f_datapipes import (
     Di_F_DataPipeline,
-    Pytorch_Transformer,
-    Pytorch_MinMax_Tx,
-    Pytorch_OneHot_Tx,
+    Di_F_Transform_OneHot,
+    DI_F_Transform_MinMax,
+    Di_F_Transformer,
 )
 
 
 # Create an instance of Pytorch Pipeline class:
-mx_retail_salary1_datapipeline = Pytorch_Transformer(
+mx_retail_salary1_datapipeline = Di_F_Transformer(
     [
-        {"id": "one-hot", "transformer": Pytorch_OneHot_Tx, "fields": [0]},
-        {"id": "Min", "transformer": Pytorch_MinMax_Tx, "fields": [1, 2]},
+        {"id": "one-hot", "transformer": Di_F_Transform_OneHot, "fields": [0]},
+        {"id": "MinMax", "transformer": DI_F_Transform_MinMax, "fields": [1, 2]},
     ]
 )
 # ... and an instance of model Pycaret Pipeline:

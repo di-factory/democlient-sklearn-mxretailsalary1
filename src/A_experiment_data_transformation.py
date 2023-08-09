@@ -9,7 +9,6 @@ from src.conf.di_f_logging import di_f_logger
 @hydra.main(version_base=None, config_path="./conf", config_name="config")
 def main(cfg: DictConfig) -> None:
     experiment = MxRetailSalary1(cfg)
-    # di_f_logger = get_logger(cfg)
 
     di_f_logger.info(
         "--------------------------------------------------------------------------------------------------------"

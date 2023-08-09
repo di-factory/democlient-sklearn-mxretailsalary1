@@ -17,11 +17,13 @@ def main(cfg: DictConfig) -> None:
     di_f_logger.info(
         "------------------------- Starting process: Experiment_Prediction --------------------------------------"
     )
-
+    # Mexico,6116.283688211861,5,73.34452085788027
+    # CDMX,57316.98941624065,11,328.8546265062757
     dummy_input = pd.DataFrame(
-        [["Oaxaca", 6021.07, 4], ["Yucatan", 34599.0, 4]],
+        [["Mexico", 6116.28, 5], ["CDMX", 57316.99, 11]],
         columns=experiment.feature_list,
     )
+
     di_f_logger.info(f"just dummy data to input: {dummy_input}")
     result = experiment.predict(dummy_input)
     di_f_logger.info(f"result: {result}")
