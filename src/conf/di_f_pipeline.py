@@ -44,6 +44,8 @@ from torch.utils.data import DataLoader, TensorDataset  # ,Subset,SubsetRandomSa
 
 from src.conf.di_f_logging import di_f_logger
 
+import matplotlib.pyplot as plt
+
 
 # from mlflow.models.signature import infer_signature
 
@@ -771,6 +773,19 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         self.dataPipeline.save_dataPipeline()
         return result
 
+    def plot_losses(self, train_losses, val_losses):
+        epochs = range(1, len(train_losses) + 1)
+
+        plt.plot(epochs, train_losses, label='Train Loss')
+        plt.plot(epochs, val_losses, label='Validation Loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Training and Validation Losses')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig('./fig.png')
+        plt.show()
+    
     def fit(
         self, tracking: bool = False
     ) -> dict:  # this methods train the model prediction defined.
@@ -864,9 +879,13 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
             scores_v[score["id"]] = 0
             scores_t[score["id"]] = 0
 
-        self.losses = torch.zeros(
+        self.train_losses = torch.zeros(
             self.model.num_epochs
         )  # To grab the loss_train for each epoch an see evolution
+
+        self.val_losses = torch.zeros(
+            self.model.num_epochs
+        )  # To grab loss_val for each epoch an see evolution
 
         for e in range(self.model.num_epochs):
             # switching to train mode
@@ -888,12 +907,8 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
                     sc = score["metric"](y, y_pred.detach().numpy())
                     scores_t[score["id"]] += sc
 
-            self.losses[e] = np.mean(batch_loss)
-            """
-            for score in self.scores:  # geting mean of each metric for each epoch
-                scores.append((score["id"], scores_t[score["id"]] / self.model.num_epochs))
-                results["train"] = scores
-            """
+            self.train_losses[e] = np.mean(batch_loss)
+
             # let's evaluate:
             self.model.eval()
 
@@ -901,16 +916,16 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
 
             with torch.no_grad():  # stop gradient descent in eval)
                 y_pred = self.model.forward(X)
-
+                self.val_losses[e] = self.model.loss_func(y_pred, y)
+                
                 for score in self.scores:  # Adding each metric for each epoch
                     sc = score["metric"](y, y_pred)
                     scores_v[score["id"]] += sc
 
-                if (e + 1) % 100 == 0:
-                    di_f_logger.info(f"epoch:{e+1}, loss:{self.losses[e]}")
+                if (e + 1) % (self.model.num_epochs//10) == 0:
+                    di_f_logger.info(f"epoch:{e+1}, loss:{self.train_losses[e]} .. {self.val_losses[e]}")
 
         scores = []
-        print(len(train_loader))
         for score in self.scores:  # geting mean of each metric for each epoch
             scores.append(
                 (
@@ -918,12 +933,17 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
                     scores_t[score["id"]] / (self.model.num_epochs * len(train_loader)),
                 )
             )
+
+        self.plot_losses(self.train_losses, self.val_losses)
+        
         results["trainning"] = scores
 
         scores = []
         for score in self.scores:  # geting mean of each metric for each epoch
             scores.append((score["id"], scores_v[score["id"]] / self.model.num_epochs))
+ 
         results["validation"] = scores
+        di_f_logger.info(f"losses for trainning (shape): {self.train_losses.shape} .. val: {self.val_losses.shape}")
 
         # Claculating metrics for testing
         self.model.eval()

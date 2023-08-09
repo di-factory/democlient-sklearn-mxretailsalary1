@@ -65,13 +65,13 @@ class Pytorch_FFNN_Regressor(nn.Module):
         # self.drop2 = nn.Dropout(0.20)
 
         self.layerh3 = nn.Linear(150, 50)
-        self.drop3 = nn.Dropout(0.20)
+        self.drop3 = nn.Dropout(0.10)
 
         self.layer_o = nn.Linear(50, output_dim)
 
-        self.batch_size = 16
+        self.batch_size = 160
         self.lr = 0.01
-        self.num_epochs = 500
+        self.num_epochs = 60
         self.loss_func = nn.MSELoss()
         self.optimizer = Pytorch_Optimizers("Adam").optimizer(
             self.parameters(), lr=self.lr
