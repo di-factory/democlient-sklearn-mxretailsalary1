@@ -24,6 +24,7 @@ from sklearn.metrics import (
 
 # from catboost import CatBoostRegressor
 import src.conf.di_f_datapipes as di_f_datapipes
+import src.conf.di_f_mlpipes as di_f_mlpipes
 import os
 import pandas as pd
 import numpy as np
@@ -454,7 +455,6 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         self, tracking: bool = False
     ) -> dict:  # this method use Crossvalidations in trainning
         # Set variable verbose to activate prints in function
-        verbose = self.cfg.ml_pipeline.verbose
 
         # Load the data
         train_features = pd.read_csv(
@@ -519,8 +519,8 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         scores_v = {}  # this dict is to grab the different metrics
         for score in self.scores:  # Initializing vectors to cumpute scores in each fold
             scores_v[score["id"]] = 0
-        if verbose:
-            di_f_logger.info("scores pre-Kfold:")
+
+        di_f_logger.info("scores pre-Kfold:")
 
         for score in self.scores:
             sc = cross_val_score(
@@ -531,16 +531,15 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
                 scoring=make_scorer(score["metric"]),
             ).mean()
             scores.append((score["id"], sc))
-            if verbose:
-                di_f_logger.info(f"cross_val_scoring (before kfold){score['id']}: {sc}")
+            di_f_logger.info(f"cross_val_scoring (before kfold){score['id']}: {sc}")
+
         results["cross_val_score"] = scores
 
         # Fit the model
-        if verbose:
-            di_f_logger.info("fitting the  model")
-            di_f_logger.info(
-                f"dimensions: features-> {kfold_features.shape}, labels-> {kfold_labels.shape}"
-            )
+        di_f_logger.info("fitting the  model")
+        di_f_logger.info(
+            f"dimensions: features-> {kfold_features.shape}, labels-> {kfold_labels.shape}"
+        )
 
         for train_index, test_index in kfold.split(kfold_features):
             X_train = np.array(kfold_features)[train_index]
@@ -555,21 +554,18 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
                 sc = score["metric"](y_val, y_pred)
                 scores_v[score["id"]] += sc
 
-        if verbose:
-            di_f_logger.info("scores post-Kfold:")
+        di_f_logger.info("scores post-Kfold:")
 
         scores = []
         for score in self.scores:
-            if verbose:
-                di_f_logger.info(
-                    f"scoring after kfold {score['id']}: {scores_v[score['id']]/self.kfold['n_splits']}"
-                )
+            di_f_logger.info(
+                f"scoring after kfold {score['id']}: {scores_v[score['id']]/self.kfold['n_splits']}"
+            )
             scores.append((score["id"], sc))
         results["train"] = scores
 
         # Evaluating the model with unseen data
-        if verbose:
-            di_f_logger.info("Model evaluation:")
+        di_f_logger.info("Model evaluation:")
 
         X_test = np.array(test_features)
         y_test = np.array(test_labels)
@@ -579,14 +575,13 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         scores = []
         y_pred = self.model.predict(X_test)
 
-        if verbose:
-            di_f_logger.info("scores for test:")
+        di_f_logger.info("scores for test:")
 
         for score in self.scores:
             sc = score["metric"](y_test, y_pred)
             scores.append((score["id"], sc))
-            if verbose:
-                di_f_logger.info(f"test scoring {score['id']}: {sc}")
+
+            di_f_logger.info(f"test scoring {score['id']}: {sc}")
         results["test"] = scores
 
         # saving the model
@@ -773,19 +768,6 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         self.dataPipeline.save_dataPipeline()
         return result
 
-    def plot_losses(self, train_losses, val_losses):
-        epochs = range(1, len(train_losses) + 1)
-
-        plt.plot(epochs, train_losses, label='Train Loss')
-        plt.plot(epochs, val_losses, label='Validation Loss')
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.title('Training and Validation Losses')
-        plt.legend()
-        plt.grid(True)
-        plt.savefig('./fig.png')
-        plt.show()
-    
     def fit(
         self, tracking: bool = False
     ) -> dict:  # this methods train the model prediction defined.
@@ -917,13 +899,15 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
             with torch.no_grad():  # stop gradient descent in eval)
                 y_pred = self.model.forward(X)
                 self.val_losses[e] = self.model.loss_func(y_pred, y)
-                
+
                 for score in self.scores:  # Adding each metric for each epoch
                     sc = score["metric"](y, y_pred)
                     scores_v[score["id"]] += sc
 
-                if (e + 1) % (self.model.num_epochs//10) == 0:
-                    di_f_logger.info(f"epoch:{e+1}, loss:{self.train_losses[e]} .. {self.val_losses[e]}")
+                if (e + 1) % (self.model.num_epochs // 10) == 0:
+                    di_f_logger.info(
+                        f"epoch:{e+1}, train loss:{self.train_losses[e]} val loss {self.val_losses[e]}"
+                    )
 
         scores = []
         for score in self.scores:  # geting mean of each metric for each epoch
@@ -934,16 +918,22 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
                 )
             )
 
-        self.plot_losses(self.train_losses, self.val_losses)
-        
+        di_f_mlpipes.plot_losses(
+            self.train_losses,
+            self.val_losses,
+            os.path.join(self.cfg.paths.graphs_dir, f"{self.id}_trainning_losses.png"),
+        )
+
         results["trainning"] = scores
 
         scores = []
         for score in self.scores:  # geting mean of each metric for each epoch
             scores.append((score["id"], scores_v[score["id"]] / self.model.num_epochs))
- 
+
         results["validation"] = scores
-        di_f_logger.info(f"losses for trainning (shape): {self.train_losses.shape} .. val: {self.val_losses.shape}")
+        di_f_logger.info(
+            f"losses for trainning (shape): {self.train_losses.shape} .. val: {self.val_losses.shape}"
+        )
 
         # Claculating metrics for testing
         self.model.eval()

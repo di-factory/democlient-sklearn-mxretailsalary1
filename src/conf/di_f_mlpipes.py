@@ -7,6 +7,22 @@ from typing import List
 
 from pycaret.internal.pipeline import Pipeline as Pycaret_pipeline
 from sklearn.ensemble import GradientBoostingRegressor, VotingRegressor
+import matplotlib.pyplot as plt
+
+
+# utilities
+def plot_losses(train_losses, val_losses, pathfile):
+    epochs = range(1, len(train_losses) + 1)
+
+    plt.plot(epochs, train_losses, label="Train Loss")
+    plt.plot(epochs, val_losses, label="Validation Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Training and Validation Losses")
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(pathfile)
+    plt.show()
 
 
 Voting_Pycaret_model = Pycaret_pipeline(

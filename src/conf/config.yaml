@@ -21,6 +21,7 @@ paths:
   interim_data_dir: ${paths.project_dir}/data/interim #intermidiate data, from processed as result of data profiling in pipeline
 
   reports_dir: ${paths.project_dir}/reports #reports directory from all the project
+  graphs_dir: ${paths.project_dir}/reports/figures #reports directory from all the project
   models_dir: ${paths.project_dir}/models #where models are saved in different parts of pipeline
   
   api_pycaret_dir: ${paths.project_dir}/APIs/API_Pycaret #where pycaret saves create_api function (notebook)
