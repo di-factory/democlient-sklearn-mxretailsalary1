@@ -61,50 +61,51 @@ class Di_F_Pipe:  # Main class for all the experiments definitions
     class Di_FX_Kfold:  # To record the params of Kfolds
         def __init__(
             self,
-            kfold_dict: dict = {"n_splits": 5, "shuffle": True, "random_state": 123},
+            kfold_dict: dict = {"n_splits": 5, "shuffle": True},
         ):
             self.n_splits = kfold_dict["n_splits"]
             self.shuffle = kfold_dict["shuffle"]
-            self.random_state = kfold_dict["random_state"]
-
-    class Features(BaseModel):  # To represent the Features Set of the experiment
-        pass
-
-        def __repr__(self):
-            return {"id": self.id, "metric": self.metric}
 
     def __init__(self, cfg: DictConfig):
-        # def create_Features() -> DictConfig: # this codes keeps when  pkl can manage create_model from pydantic
-        #    fields_dict = {}
-        #    for record in self.cfg.data_fields.features:
-        #        fields_dict[record.field] = (eval(record.type), record.default)
-        #    return create_model('Features', **fields_dict)  # This retrurn a class
 
         def create_catalogues() -> (
             dict
-        ):  # to save the catalogue of values of field according w config.yaml
+        ):  
+            """ this function inside init method of meta-class is 
+            to save the catalogue of values of field according w config.yaml
+            
+            It has no arguments.
+            
+            The result is a dict that contanis the different catalogues of data
+            This will be a dict of {'field (of aList)': [list of values]}
+            for example:
+            {'fieldx': ['val1', 'val2', ...],
+            'fieldy': ['another list'],
+            }
+            """
             catalogue = {}
             for record in self.cfg.data_fields.features:
                 if hasattr(
                     record, "aList"
                 ):  # Looking for the field aList in each record
                     catalogue[record.field] = record.aList
+            
             return catalogue
 
-        self.di_fx: List[str] = []
+        self.di_fx: List[str] = []  # This initialize the tag of the final experiment. All started with Di_F_Pipe
         self.di_fx.append("Di_F_Pipe")  # Level 0 class of the experiment
 
-        self.cfg: DictConfig = cfg  # config.yaml file
+        self.cfg: DictConfig = cfg  # This load the config.yaml file as a dict named cfg
         self.id: str = self.cfg.general_ml.experiment  # id = client.project.experiment
-        self.features: self.Features  # create_Features()()  # Features as instance of BaseModel by create_features
-        self.feature_list = [r.field for r in self.cfg.data_fields.features]
 
-        self.dataPipeline: Pipeline = None  # Data Pipeline
-        self.model: Any = None  # ML Pipeline
+        self.feature_list = [r.field for r in self.cfg.data_fields.features]   # This grab the feature list from config.yaml
 
-        self.catalogues: dict = create_catalogues()
-        self.scores: List[self.Di_FX_score] = None
-        self.kfold = self.Di_FX_Kfold()
+        self.dataPipeline: Any = None  # Data Pipeline pointer
+        self.model: Any = None  # ML Pipeline pointer
+
+        self.catalogues: dict = create_catalogues()  #this creates the catalogues of categorical data in features
+        self.scores: List[self.Di_FX_score] = None  # model scores array pointer
+        self.kfold = self.Di_FX_Kfold() # In this case initialize kfold with default params.
 
     def load_model(
         self,
@@ -551,7 +552,8 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
             shuffle=self.kfold["shuffle"],
             random_state=self.cfg.general_ml.seed,
         )
-
+        di_f_logger.info(f"Params for Kfold: {self.kfold}")
+        
         # creating datasets from concatenation of sources
         # In this case as kfold, we need to concatenate the whole datasets
         kfold_features = pd.concat(

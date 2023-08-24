@@ -74,8 +74,7 @@ class MxRetailSalary1(Di_F_Pipe_Regression_Pytorch_FFNN):
 
         self.kfold = {
             "n_splits": 5,
-            "shuffle": True,
-            "random_state": self.cfg.general_ml.seed,
+            "shuffle": True
         }
 
         # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)

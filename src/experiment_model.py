@@ -153,9 +153,8 @@ class MxRetailSalary1(Di_F_Pipe_Regression_Pycaret_Voating):
         ]
 
         self.kfold = {
-            "n_splits": 5,
+            "n_splits": 10,
             "shuffle": True,
-            "random_state": self.cfg.general_ml.seed,
         }
 
         # here you define the datapipeline transformation model getting params from pycaret in data profiling (notebook)
