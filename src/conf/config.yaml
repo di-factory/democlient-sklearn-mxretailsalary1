@@ -1,44 +1,61 @@
-#version = july 14-2023
+# version = august 23-2023
 
-general_ml:
-  seed: 123 #seed for any experiment and model
-  encoding: iso-8859-1 #used for open files with specific encodind
+general_ml:  # for general variables of the whole experiment
+  seed: 123 # seed for any experiment and model
+  encoding: iso-8859-1 # used for open files with specific encodind
   cloud: AWS
 
   client: democlient
   project: sklearn
   experiment: mxreatilsalary1
+  # this computer is:
+  # the directory of this experiment is .../<client>-<project>/dif-s-<experiment>
 
-  tracking_on: False
+  tracking_on: False  # this param controls when Mlflow comes in (true) or not (false)
 
 
-paths:
-  project_dir: /home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1 #project directory in this instance
-  di_f_pipeline_log_dir: ${paths.project_dir}/logs 
-
-  raw_data_dir: ${paths.project_dir}/data/raw #raw_data directory
-  processed_data_dir: ${paths.project_dir}/data/processed #processed data, from raw as result of data profiling (notebook)
-  interim_data_dir: ${paths.project_dir}/data/interim #intermidiate data, from processed as result of data profiling in pipeline
-
-  reports_dir: ${paths.project_dir}/reports #reports directory from all the project
-  graphs_dir: ${paths.project_dir}/reports/figures #reports directory from all the project
-  models_dir: ${paths.project_dir}/models #where models are saved in different parts of pipeline
+paths:  # the directory paths inside the current working directory at <project_dir> below
   
-  api_pycaret_dir: ${paths.project_dir}/APIs/API_Pycaret #where pycaret saves create_api function (notebook)
-  api_fastapi_dir: ${paths.project_dir}/APIs/FastAPI #where API with Fastapi template resides
-  api_flask_dir: ${paths.project_dir}/APIs/API_Flask #where API with Flask template resides
+  #  general directories
+  project_dir: /home/jagpascoe/democlient-sklearn/dif-s-mxretailsalary1  # project directory in this instance
+  di_f_pipeline_log_dir: ${paths.project_dir}/logs  # the directory where save logs
+  reports_dir: ${paths.project_dir}/reports  # reports directory from all the project
+  graphs_dir: ${paths.project_dir}/reports/figures  # reports directory from all the project
+  models_dir: ${paths.project_dir}/models  # dir where models are saved in different parts of pipeline
+  
+  #  data directories:
+  raw_data_dir: ${paths.project_dir}/data/raw  # raw_data directory
+  processed_data_dir: ${paths.project_dir}/data/processed  # processed data dir, from raw as result of data profiling (notebook)
+  interim_data_dir: ${paths.project_dir}/data/interim  # intermidiate data dir, from processed as result of data profiling in pipeline
+  
+  # apis directories:
+  api_pycaret_dir: ${paths.project_dir}/APIs/API_Pycaret  # dir where pycaret saves create_api function (notebook)
+  api_fastapi_dir: ${paths.project_dir}/APIs/FastAPI  # dir where API with Fastapi template resides
+  api_flask_dir: ${paths.project_dir}/APIs/API_Flask  # dir where API with Flask template resides
 
-  streamlit_app_dir: ${paths.project_dir}/Apps/Streamlit
-  flask_app_dir: ${paths.project_dir}/Apps/Flask
+  #apps directories:
+  streamlit_app_dir: ${paths.project_dir}/Apps/Streamlit  # dir where streamlit app resides
+  flask_app_dir: ${paths.project_dir}/Apps/Flask  # dir where flask app resides
 
-file_names:
-  di_f_pipeline_log: ${general_ml.experiment}_log.log
-  raw_file : raw-data.csv #name of raw_data file
-
+file_names:  # filenames of each kind of object
+  
+  #  general filenames:
+  di_f_pipeline_log: ${general_ml.experiment}_log.log  # the filename of the log file
+  data_profiling_report: data_profiling_report.html #Name of the report of data profiling (notebook)
+  
+  #  data filenames:
+  raw_file : raw-data.csv  # filename of raw_data file
   processed_data: processed_data.csv #name of processed data file (Notebook)
-  processed_unseen_data: processed_unseen_data.csv #name of processed UNSEEN data file (notebook)
-  
+  processed_unseen_data: processed_unseen_data.csv #name of processed UNSEEN data file (notebook)  
   data_file: datafile.csv
+
+  ml_profiling_best: ml_profiling_best  # this file comes from *ml_profiling* (pycaret) Notebook
+
+  # trainned models: are used in predict method, saved in fit/fit_Kfold methods
+  trainned_datapipeline: trainned_datapipeline  # this is the saved datapipe/data transformation model 
+  trainned_model: trainned_model  # this is the saved trainned ML model
+
+  #  .. the six fantastics data files:
   train_features: train_features.csv #used for trainning
   train_labels: train_labels.csv
   validation_features: valid_features.csv #used in trainning, mainly in deep learning, otherwise must be concatenated with trainning
@@ -46,16 +63,13 @@ file_names:
   test_features: test_features.csv #used to test trainning, at the end of each trainning function, as unseen data
   test_labels: test_labels.csv
   
-  data_profiling_report: data_profiling_report.html #Name of the report of data profiling (notebook)
-  
-  ml_profiling_best: ml_profiling_best
+  #  apis filenames:
   api_ml_profiling: ml_profiling_best_API
-  datapipeline: datapipeline
-  model: model
-
-  streamlit_predict_model: streamlit_predict.pkl
   fastapi_predict_model: fastapi_predict.pkl
   apiflask_predict_model: apiflask_predict.pkl
+
+  #  apps filenames:
+  streamlit_predict_model: streamlit_predict.pkl
   flask_predict_model: flask_predict.pkl
   
 

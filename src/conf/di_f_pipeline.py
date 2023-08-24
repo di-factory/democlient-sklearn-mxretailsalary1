@@ -57,7 +57,7 @@ class Di_F_Pipe:  # Main class for all the experiments definitions
         def __init__(self, score: dict):
             self.id = score["id"]
             self.metric = score["metric"]
-
+            
     class Di_FX_Kfold:  # To record the params of Kfolds
         def __init__(
             self,
@@ -216,7 +216,7 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
     ):  # this method loads the model prediction that was created/saved in fits methods
         try:
             self.model = joblib.load(
-                os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model)
+                os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.trainned_model)
             )
             di_f_logger.info("model loaded successfully!")
         except Exception as e:
@@ -226,7 +226,7 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         try:
             joblib.dump(
                 self.model,
-                os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.model),
+                os.path.join(self.cfg.paths.models_dir, self.cfg.file_names.trainned_model),
             )
             di_f_logger.info("model saved successfully!")
         except Exception as e:
@@ -360,7 +360,34 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
     def fit(
         self, tracking: bool = False
     ) -> dict:  # this methods train the model prediction defined.
-        # Load the data
+    
+        """
+        This method is for trainning the pycaret Regression model
+        params:
+        tracking: bool param to activate mlflow tracking
+        
+        returns: a dictionary with two labels:
+        'training': score
+        'test': score
+        For example, check this result:
+        results: {'trainning': [('mape', 0.12076657836635908), ('r2', 0.2426695012765969)], 
+                 'test': [('mape', 0.08279837), ('r2', 0.6367550147355364)]}
+                 
+        score is also a dictionary struture withseveral pairs of type:
+        'id' : metric id,
+        'metric': funcrion metrict to be used
+        
+        for example:
+        self.scores = [
+            {"id": "mape", "metric": mean_absolute_percentage_error},
+            {"id": "r2", "metric": r2_score},
+        ]
+        
+        """
+        # Loading the data in 6 sets: train features & labels, 
+        #                             validation features & labels,
+        #                             test features and labels
+        
         train_features = pd.read_csv(
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.train_features
@@ -394,7 +421,7 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         )
 
         # creating datasets from concatenation of sources
-        # In this case as kfold, we need to concatenate the whole datasets
+        # In this case we need to concatenate train and validations sets
         X_train = pd.concat([train_features, validation_features], ignore_index=True)
         y_train = pd.concat([train_labels, validation_labels], ignore_index=True)
 
@@ -407,7 +434,7 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
             mlflow.sklearn.autolog()
             mlflow.start_run()
 
-        # Fit the model
+        # Fitting the model
         di_f_logger.info("fitting the  model")
         di_f_logger.info(
             f"dimensions: features-> {X_train.shape}, labels-> {y_train.shape}"
@@ -428,6 +455,8 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
             scores.append((score["id"], sc))
 
             di_f_logger.info(f"train scoring {score['id']}: {sc}")
+        
+        #  writting label trainning of results dict
         results["train"] = scores
 
         # calculating testing scores
@@ -440,6 +469,8 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
             scores.append((score["id"], sc))
 
             di_f_logger.info(f"test scoring {score['id']}: {sc}")
+        
+        #  .. and writting label test of results dict
         results["test"] = scores
 
         # saving the model
@@ -453,10 +484,35 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
 
     def fit_Kfold(
         self, tracking: bool = False
-    ) -> dict:  # this method use Crossvalidations in trainning
-        # Set variable verbose to activate prints in function
-
-        # Load the data
+    ) -> dict:  
+        
+        """
+        This method is for trainning the pycaret Regression model. Use Crossvalidations in trainning
+        params:        
+        tracking: bool param to activate mlflow tracking
+        
+        returns: a dictionary with two labels:
+        'training': score
+        'test': score
+        For example, check this result:
+        results: {'trainning': [('mape', 0.12076657836635908), ('r2', 0.2426695012765969)], 
+                 'test': [('mape', 0.08279837), ('r2', 0.6367550147355364)]}
+                 
+        score is also a dictionary struture withseveral pairs of type:
+        'id' : metric id,
+        'metric': funcrion metrict to be used
+        
+        for example:
+        self.scores = [
+            {"id": "mape", "metric": mean_absolute_percentage_error},
+            {"id": "r2", "metric": r2_score},
+        ]
+        
+        """
+        # Loading the data in 6 sets: train features & labels, 
+        #                             validation features & labels,
+        #                             test features and labels
+        
         train_features = pd.read_csv(
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.train_features
@@ -771,7 +827,36 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
     def fit(
         self, tracking: bool = False
     ) -> dict:  # this methods train the model prediction defined.
-        # Loadibg the data in 6 sets
+        """
+        This method is for trainning the pytorch Regression FNN
+        params:
+        tracking: bool param to activate mlflow tracking
+        
+        returns: a dictionary with three labels:
+        'training': score
+        'validation': score
+        'test': score
+        For example, check this result:
+        results: {'trainning': [('mape', 0.12076657836635908), ('r2', 0.2426695012765969)], 
+                 'validation': [('mape', 0.11981553435325623), ('r2', 0.35794231995090925)], 
+                 'test': [('mape', 0.08279837), ('r2', 0.6367550147355364)]}
+                 
+        score is also a dictionary struture withseveral pairs of type:
+        'id' : metric id,
+        'metric': funcrion metrict to be used
+        
+        for example:
+        self.scores = [
+            {"id": "mape", "metric": mean_absolute_percentage_error},
+            {"id": "r2", "metric": r2_score},
+        ]
+        
+        """
+        
+        # Loading the data in 6 sets: train features & labels, 
+        #                             validation features & labels,
+        #                             test features and labels
+        
         train_features = pd.read_csv(
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.train_features
@@ -807,20 +892,20 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         # changing from datasets to tensors
         train_features = torch.tensor(train_features.values, dtype=torch.float)
         train_labels = torch.log(
-            torch.tensor(train_labels.values, dtype=torch.float)
-        )  # scaling to log the labels
+            torch.tensor(train_labels.values, dtype=torch.float)  # scaling to log the labels
+        )  
         validation_features = torch.tensor(
             validation_features.values, dtype=torch.float
         )
         validation_labels = torch.log(
-            torch.tensor(validation_labels.values, dtype=torch.float)
-        )  # scaling to log the labels
+            torch.tensor(validation_labels.values, dtype=torch.float)  # scaling to log the labels
+        )  
         test_features = torch.tensor(test_features.values, dtype=torch.float)
         test_labels = torch.log(
-            torch.tensor(test_labels.values, dtype=torch.float)
-        )  # scaling to log the labels
+            torch.tensor(test_labels.values, dtype=torch.float)  # scaling to log the labels
+        )  
 
-        # creating datasets and dataloaders
+        # creating datasets and dataloaders for trainning and validation data
         train_data = di_f_datapipes.PytorchDataSet(X=train_features, y=train_labels)
         validation_data = di_f_datapipes.PytorchDataSet(
             validation_features, validation_labels
@@ -917,19 +1002,21 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
                     scores_t[score["id"]] / (self.model.num_epochs * len(train_loader)),
                 )
             )
-
+        #plotting loss curves in corresponding directory defined in config.yaml file
         di_f_mlpipes.plot_losses(
             self.train_losses,
             self.val_losses,
             os.path.join(self.cfg.paths.graphs_dir, f"{self.id}_trainning_losses.png"),
         )
-
+        #  writting label trainning of results dict
         results["trainning"] = scores
-
+        
+        #  reinitializing scores dict now to prepare for results label of validation
         scores = []
         for score in self.scores:  # geting mean of each metric for each epoch
             scores.append((score["id"], scores_v[score["id"]] / self.model.num_epochs))
 
+        #  writting label validation of results dict
         results["validation"] = scores
         di_f_logger.info(
             f"losses for trainning (shape): {self.train_losses.shape} .. val: {self.val_losses.shape}"
@@ -947,6 +1034,8 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
             scores.append((score["id"], sc))
 
             di_f_logger.info(f"test scoring {score['id']}: {sc}")
+        
+        #  .. and finally, writting label test of results dict    
         results["test"] = scores
 
         # saving the model

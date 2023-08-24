@@ -313,7 +313,7 @@ class Di_F_DataPipeline:
         try:
             self.dataPipeline = joblib.load(
                 os.path.join(
-                    self.cfg.paths.models_dir, self.cfg.file_names.datapipeline
+                    self.cfg.paths.models_dir, self.cfg.file_names.trainned_datapipeline
                 )
             )
             di_f_logger.info("datapipeline loaded successfully!")
@@ -325,7 +325,7 @@ class Di_F_DataPipeline:
             joblib.dump(
                 self.dataPipeline,
                 os.path.join(
-                    self.cfg.paths.models_dir, self.cfg.file_names.datapipeline
+                    self.cfg.paths.models_dir, self.cfg.file_names.trainned_datapipeline
                 ),
             )
             di_f_logger.info("Datapipeline saved successfully!")
