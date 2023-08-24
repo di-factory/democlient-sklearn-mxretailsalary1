@@ -64,27 +64,36 @@ file_names:  # filenames of each kind of object
   test_labels: test_labels.csv
   
   #  apis filenames:
-  api_ml_profiling: ml_profiling_best_API
-  fastapi_predict_model: fastapi_predict.pkl
-  apiflask_predict_model: apiflask_predict.pkl
+  api_ml_profiling: ml_profiling_best_API  # this file comes *ml_profiling* (pycaret) Notebook deploying fastapi model, and used in API/Pycaret
+  fastapi_predict_model: fastapi_predict.pkl  # this model is saved by <save_fastapi_model.api> to be used by the fastapi code in API/FatAPI
+  apiflask_predict_model: apiflask_predict.pkl  # this model is saved by <save_apiflask_model.api> to be used by the fastapi code in API/API_Flask
 
   #  apps filenames:
-  streamlit_predict_model: streamlit_predict.pkl
-  flask_predict_model: flask_predict.pkl
+  streamlit_predict_model: streamlit_predict.pkl  # this model is saved by <save_streamlit_model.api> to be used by the app code in Apps/Streamlit
+  flask_predict_model: flask_predict.pkl  # this model is saved by <save_flask_model.api> to be used by the app code in Apps/Flask
   
 
-cloud_paths:
-  bucket_path: dif-b-democlient-sklearn
+cloud_paths:  # these paths are related with the cloud provider choosen
+  bucket_path: dif-b-democlient-sklearn  # this is the path for the bucket dir in cloud (S3 for exmaple in AWS)
+  # inisde the bucket choosen, these are the paths involved inside it:
+  # <bucket_path>
+  #               / <experiment> = <experiment_path>
+  #                              / <mlflow>
+  #                              / <reports>
+  #                              / <raw-data>
+  #                              / <dvc-store>
+  
   experiment_path: ${cloud_paths.bucket_path}/mxretailsalary1
   mlflow_path: ${cloud_paths.experiment_path}/mlflow
   reports_path: ${cloud_paths.experiment_path}/reports
   rawdata_path: ${cloud_paths.experiment_path}/raw-data
   dvc_path: ${cloud_paths.experiment_path}/dvc-store
 
-data_fields:
+#  About the model/experiment
+data_fields:  # about the data
   description: About what is the dataset
 
-  features:
+  features:  # This models the data structure as a list of fields, that can contain another list <aList> of values
     - field: state
       type: str
       default: 'Hidalgo'
@@ -99,9 +108,10 @@ data_fields:
       default: 6
 
 
-  label: 
+  label: # this is the label to be predicted
     salary_employee_day
 
+# from here follows two kinds of params: those of data_pipeline and others of ml_pipeline:
 data_pipeline:
   level: Pycaret
   features_engineering:
