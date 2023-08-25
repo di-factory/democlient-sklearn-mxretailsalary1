@@ -50,6 +50,30 @@ import matplotlib.pyplot as plt
 
 # from mlflow.models.signature import infer_signature
 
+"""
+This is the kind of structure we use to:
+Di_F_Pipe
+    |--- Di_F_Pipe_Regression
+            |--- Di_F_Pipe_Regression_Pycaret
+                    |--- Di_F_Pipe_Regression_Pycaret_Voating  <- Voating essamble model for regression
+                    
+            |--- Di_F_Pipe_Regression_Pytorch
+                    |--- Di_F_Pipe_Regression_Pytorch_FFNN  <- Feedforward Neural Network for regression
+                    
+            |--- Di_F_Pipe_Regression_Sklearn
+            |--- Di_F_Pipe_Regression_Lightning
+            |--- Di_F_Pipe_Regression_Tensorflow
+            |--- Di_F_Pipe_Regression_Keras
+            
+            
+    |--- Di_F_Pipe_Classification
+            |--- Di_F_Pipe_Classification_Pycaret
+            |--- Di_F_Pipe_Classification_Pytorch
+            |--- Di_F_Pipe_Classification_Sklearn
+            |--- Di_F_Pipe_Classification_Lightning
+            |--- Di_F_Pipe_Classification_Tensorflow
+            |--- Di_F_Pipe_Classification_Keras
+"""
 
 # --------- LEVEL 0 -----------------
 class Di_F_Pipe:  # Main class for all the experiments definitions
