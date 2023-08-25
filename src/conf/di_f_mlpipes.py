@@ -18,34 +18,6 @@ from src.conf.di_f_logging import di_f_logger
     'hiddenLayers': List = [], # Hidden layer composition
 }"""
 
-class Pytorch_FFNN(nn.Module):
-    def __init__(self, NN_def:dict):
-        super().__init__()
-
-        # Create a dictionary to save the layers
-        self.layers = nn.ModuleDict()
-        self.nImputs = NN_def['nImputs']  # Number of inputs as integer
-        self.nOutputs = NN_def['nOutputs']  # Number of outputs
-        self.hiddenLayers = NN_def['hiddenLayers']  # Number of hidden nodes by layer
-    
-        self.losses = []  # For storing the losses at trainning
-
-        ### input layer
-        self.layers["input"] = nn.Linear(self.nImputs, self.hiddenLayers[0])
-
-        for layer, node in enumerate(self.hiddenLayers):
-            if layer >0:
-                self.layers[f"hidden{layer}"] = nn.Linear(self.hiddenLayers[layer-1], node)
-
-        ### output layer
-        self.layers["output"] = nn.Linear(self.hiddenLayers[-1], self.nOutputs)
-
-    def forward(self, x):
-        for layer in self.layers:
-            x = layer(x)
-        return x
-
-
 # utilities
 def plot_losses(train_losses, val_losses, pathfile):
     epochs = range(1, len(train_losses) + 1)
@@ -91,7 +63,7 @@ NN_layers = {
 #  Pytorch FNN regression Model
 class Pytorch_FFNN_Regressor(nn.Module):
     def __init__(
-        self, S_layers: NN_layers=None
+        self, S_layers: NN_layers=None,
     ):  # regresor always returns one output
         super().__init__()
         
@@ -130,7 +102,15 @@ class Pytorch_FFNN_Regressor(nn.Module):
                 'dropout': None,
                 'normalize': None,
                 'activation':nn.ReLU()
-            }    
+            }
+            
+            'hyperparams':{
+                'batch_size': int,
+                'lr': float,
+                'num_epochs': int,
+                'loss_func': nn.MSELoss(),
+                'optimizer': 'Adam',
+    }        
         }
         """ 
         # Lets navigate over dict structure that shows the NN

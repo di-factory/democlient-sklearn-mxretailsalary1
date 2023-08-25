@@ -141,8 +141,8 @@ My_Pytorch_Regressor = {
     },
     'hyperparams':{
         'batch_size': 160,
-        'lr': 0.01,
-        'num_epochs':300,
+        'lr': 0.005,
+        'num_epochs':700,
         'loss_func': nn.MSELoss(),
         'optimizer': 'Adam',
     }    
