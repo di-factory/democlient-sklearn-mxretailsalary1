@@ -68,7 +68,7 @@ class Pytorch_FFNN_Regressor(nn.Module):
         super().__init__()
         
         self.layers = nn.ModuleDict()  # to write the different layers of the pytorch regression model
-        self.hyperparams = nn.ModuleDict()  # to write the hyperparams of the model
+        self.hyperparams: dict = {}  # to write the hyperparams of the model
         
         """
         The structure in S_layers is a dict with three layers: input, hidden, and output, each one can have 
@@ -125,14 +125,13 @@ class Pytorch_FFNN_Regressor(nn.Module):
                     if 'activation' in hidden.keys():
                         self.layers[f"{hidden['id']}_activation"] = hidden['activation']
             
-            elif key == 'hyperparams':
-                print('hyperparams: ',layer)
-                self.batch_size = layer['batch_size']
-                self.lr = layer['lr']
-                self.num_epochs = layer['num_epochs']
-                self.loss_func = layer['loss_func']
-                self.optimizer = Pytorch_Optimizers(layer['optimizer']).optimizer(
-                    self.parameters(), lr=self.lr)
+            elif key == 'hyperparams':              
+                self.hyperparams['batch_size'] = layer['batch_size']
+                self.hyperparams['lr'] = layer['lr']
+                self.hyperparams['num_epochs'] = layer['num_epochs']
+                self.hyperparams['loss_func'] = layer['loss_func']
+                self.hyperparams['optimizer'] = Pytorch_Optimizers(layer['optimizer']).optimizer(
+                    self.parameters(), lr=self.hyperparams['lr'])
                 
             else:
                 self.layers[f"{layer['id']}"] = layer['layer']
@@ -143,7 +142,7 @@ class Pytorch_FFNN_Regressor(nn.Module):
                 if 'activation' in layer.keys():
                     self.layers[f"{layer['id']}_activation"] = layer['activation']
         di_f_logger.info(
-        f"model definition: {self.layers}"
+        f"model definition: {self.layers} -- Hyperparams: {self.hyperparams}"
     )
                 
 

@@ -39,14 +39,16 @@ from src.conf.di_f_datapipes import (
     DI_F_Transform_MinMax,
     Di_F_Transformer,
 )
-    
+
+from src.conf.di_f_logging import di_f_logger
+
 """
     In this file, just define the needed classes to run the refered experiment.
     1.- Create or choose a class to define the desired datapipeline
     2.- Create an instance of the datapipeline class with the corresponding features
     3.- Create or choose a class to define the desired ML pipeline
     4.- Create an instance of the mlpipeline class with the corresponding hyperparams
-    
+    5.- Create the final class level=3 to wrap datapipeline and mlpiepline
 """
 
 #  1.- Create or choose a class to define the desired datapipeline
@@ -61,43 +63,53 @@ mx_retail_salary1_datapipeline = Di_F_Transformer(
 
 
 #  3.- Create or choose a class to define the desired ML pipeline
+#  3.a Case: Whole class particularly created for this:
 class Pytorch_FFNN_Regressor_mine(nn.Module):
     def __init__(
         self, input_dim, output_dim: int = 1
     ):  # regresor always returns one output
         super().__init__()
+        
+        self.layers = nn.ModuleDict()  # to write the different layers of the pytorch regression model
+        self.hyperparams: dict = {}  # to write the hyperparams of the model
+    
+        self.layers['input'] = nn.Linear(input_dim, 100)
+        self.layers['input_normalize'] = nn.LayerNorm(100)
+        self.layers['hidden1'] = nn.Linear(100, 150)
+        # self.layers['hidden1_drop'] = nn.Dropout(0.20)
+        self.layers['hidden2'] = nn.Linear(100, 150)
+        # self.layers['hidden2_drop'] = nn.Dropout(0.20)
 
-        self.layer_i = nn.Linear(input_dim, 100)
-        self.normalize = nn.LayerNorm(100)
-        self.layerh1 = nn.Linear(100, 150)
-        # self.drop1 = nn.Dropout(0.20)
-        self.layerh2 = nn.Linear(100, 150)
-        # self.drop2 = nn.Dropout(0.20)
+        self.layers['hidden3'] = nn.Linear(150, 50)
+        self.layers['hidden3_drop'] = nn.Dropout(0.20)
 
-        self.layerh3 = nn.Linear(150, 50)
-        self.drop3 = nn.Dropout(0.10)
+        self.layers['output'] = nn.Linear(50, output_dim)
 
-        self.layer_o = nn.Linear(50, output_dim)
+        self.hyperparams['batch_size'] = 160
+        self.hyperparams['lr'] = 0.01
+        self.hyperparams['num_epochs'] = 60
+        self.hyperparams['loss_func'] = nn.MSELoss()
+        self.hyperparams['optimizer'] = torch.optim.Adam(params=self.parameters(), lr=self.hyperparams['lr'])
 
-        self.batch_size = 160
-        self.lr = 0.01
-        self.num_epochs = 60
-        self.loss_func = nn.MSELoss()
-        self.optimizer = torch.optim.Adam(params=self.parameters(), lr=self.lr)
+        di_f_logger.info(
+        f"model definition: {self.layers} -- Hyperparams: {self.hyperparams}"
+        )
 
     def forward(self, x):
-        y = nn.ReLU()(self.layer_i(x))
-        y = self.normalize(y)
-        h1 = F.relu(self.layerh1(y))
-        h2 = F.relu(self.layerh2(y))
-        y = self.drop3(h1 + h2)
+        y = nn.ReLU()(self.layers['input'](x))
+        y = self.layers['input_normalize'](y)
+        h1 = F.relu(self.layers['hidden1'](y))
+        h2 = F.relu(self.layers['hidden2'](y))
+        y = self.layers['hidden3_drop'](h1 + h2)
 
-        y = F.relu(self.layerh3(y))
-        y = self.layer_o(y)
+        y = F.relu(self.layers['hidden3'](y))
+        y = self.layers['output'](y)
 
         return y
 
-
+#  3.b Case: Using predefined Pytorch class and use params in layers + hyperparams 
+#  with this following structure to define the pytorch regressor class to be used by the 
+#  Pytorch_FFNN_Regressor defined in di_f_mlpipes.py
 My_Pytorch_Regressor = {
     'input_layer':{
         'id':'input',
@@ -148,18 +160,13 @@ My_Pytorch_Regressor = {
     }    
 }
 
+#  4.- Create an instance of the mlpipeline class with the corresponding hyperparams
+#mx_retail_salary1_mlpipeline = Pytorch_FFNN_Regressor(S_layers = My_Pytorch_Regressor)
+mx_retail_salary1_mlpipeline = Pytorch_FFNN_Regressor_mine(34)
 
-mx_retail_salary1_mlpipeline = Pytorch_FFNN_Regressor(S_layers = My_Pytorch_Regressor)
 
-
+#  5.- Create the final class level=3 to wrap datapipeline and mlpiepline
 class MxRetailSalary1(Di_F_Pipe_Regression_Pytorch_FFNN):
-    class Features(
-        BaseModel
-    ):  # Rewritting Features class to include the actual features
-        state: str = "Hidalgo"
-        income_employee_day: float = 4000.00
-        employees_business: int = 6
-
     def __init__(
         self,
         cfg: DictConfig,
