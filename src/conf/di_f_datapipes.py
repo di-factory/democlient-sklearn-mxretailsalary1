@@ -96,6 +96,57 @@ def write_spplited(
     di_f_logger.info(f"                             {pathfile_test_labels}")
 
 
+def load_spplited(
+    pathfile_train_features: os.path,
+    pathfile_train_labels: os.path,
+    pathfile_validation_features: os.path,
+    pathfile_validation_labels: os.path,
+    pathfile_test_features: os.path,
+    pathfile_test_labels: os.path,
+) -> (
+    pd.DataFrame,
+    pd.DataFrame,
+    pd.DataFrame,
+    pd.DataFrame,
+    pd.DataFrame,
+    pd.DataFrame,
+):
+    """
+    this function loads 6 different dataframes: tran labesl and features, validation labels and features,
+    and test labels and features
+
+    Args:
+        pathfile_train_features (os.path): path to the train features file
+        pathfile_train_labels (os.path): path to the train labels file
+        pathfile_validation_features (os.path): path to the validation features file
+        pathfile_validation_labels (os.path): path to the validation labels file
+        pathfile_test_features (os.path): path to the test features file
+        pathfile_test_labels (os.path): path to the test labels file
+
+    Returns:
+        corresponding Pandas Dataframe datasets
+    """
+
+    train_data = pd.read_csv(pathfile_train_features)
+    train_labels = pd.read_csv(pathfile_train_labels)
+
+    val_data = pd.read_csv(pathfile_validation_features)
+    val_labels = pd.read_csv(pathfile_validation_labels)
+
+    test_data = pd.read_csv(pathfile_test_features)
+    test_labels = pd.read_csv(pathfile_test_labels)
+
+    di_f_logger.info(f"load_spplited(): Spplited data loaded")
+    di_f_logger.info(f"train data shape: {train_data.shape}")
+    di_f_logger.info(f"train labels shape: {train_labels.shape}")
+    di_f_logger.info(f"validation data shape: {val_data.shape}")
+    di_f_logger.info(f"validation labels shape: {val_labels.shape}")
+    di_f_logger.info(f"test data shape: {test_data.shape}")
+    di_f_logger.info(f"test labels shape: {test_labels.shape}")
+
+    return (train_data, train_labels, val_data, val_labels, test_data, test_labels)
+
+
 # Neutral Transformers:
 
 
@@ -244,22 +295,50 @@ class Di_F_Transform_OneHot:
 
 class Di_F_Transformer:
     def __init__(self, transformation_map: list = None):
+        """
+        Di_F_Tranformer class create a datapipeline
+
+        Args:
+            transformation_map (list, optional): The structure in transformation_map represent the transformation
+            list of transforms to be applied over the data. Each element of the list is a dictionery with three
+             subsets:
+             {
+              "id" : str,  -> string that defines the id of the transform}
+              "transformer": class, -> is the pointer of the transformation class above defined
+              "field": list -> list of the corresponding valies where the transformer will be applied
+             }
+                example:
+                [
+                    {"id": "one-hot", "transformer": Di_F_Transform_OneHot, "fields": [0]},
+                    {"id": "MinMax", "transformer": DI_F_Transform_MinMax, "fields": [1, 2]},
+                ]
+
+            Defaults to None.
+
+        """
         self.txmap = transformation_map
 
     def fit(self, X, y=None):
+        #  if X is a DF, convertit to a np_array
         if isinstance(X, pd.DataFrame):
             X = X.values
+
         for m in self.txmap:
-            m["transformer"] = m["transformer"]()
-            fields = m["fields"]
-            m["transformer"].fit(X[:, fields])
+            m["transformer"] = m["transformer"]()  #  Creating a transformer instance ()
+            m["transformer"].fit(
+                X[:, m["fields"]]
+            )  # applying fit().method of each transformer
 
     def transform(self, X):
+        #  if X is a DF, convertit to a np_array
         if isinstance(X, pd.DataFrame):
             X = X.values
 
+        #  This code is to create the final dataset in Pandas.DF
+        #  it will concatenate columns to the right side.
         for i, m in enumerate(self.txmap):
             transformed = m["transformer"].transform(X[:, m["fields"]])
+
             if not i:
                 Xnew = transformed
             else:
@@ -296,6 +375,13 @@ class PytorchDataSet(Dataset):
 
 class Di_F_DataPipeline:
     def __init__(self, cfg: DictConfig, data_pipeline: Optional[Callable] = None):
+        """
+        This is basically a Wrapper to equiparate with all the models
+
+        Args:
+            cfg (DictConfig): _description_
+            data_pipeline (Optional[Callable], optional): _description_. Defaults to None.
+        """
         self.cfg = cfg
         self.dataPipeline = data_pipeline
 

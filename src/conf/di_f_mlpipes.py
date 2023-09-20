@@ -11,12 +11,6 @@ import matplotlib.pyplot as plt
 
 from src.conf.di_f_logging import di_f_logger
 
-#  pytorch base models
-"""Di_F_NN = {
-    'nImputs': int = 1, #  Number of input features
-    'nOutputs': int = 1, #  Number of output features
-    'hiddenLayers': List = [], # Hidden layer composition
-}"""
 
 # utilities
 def plot_losses(train_losses, val_losses, pathfile):
@@ -51,25 +45,30 @@ Voting_Pycaret_model = Pycaret_pipeline(
     memory=None,
 )
 
-Layer: List = {'id':'', 'layer':None, 'dropout':None, 'normalize':None, 'activation':None}
-
-NN_layers = {
-    'input_layer': Layer,
-    'hidden_layers': [Layer],
-    'output_layers': Layer
+Layer: List = {
+    "id": "",
+    "layer": None,
+    "dropout": None,
+    "normalize": None,
+    "activation": None,
 }
+
+NN_layers = {"input_layer": Layer, "hidden_layers": [Layer], "output_layers": Layer}
 
 
 #  Pytorch FNN regression Model
 class Pytorch_FFNN_Regressor(nn.Module):
     def __init__(
-        self, S_layers: NN_layers=None,
+        self,
+        S_layers: NN_layers = None,
     ):  # regresor always returns one output
         super().__init__()
-        
-        self.layers = nn.ModuleDict()  # to write the different layers of the pytorch regression model
+
+        self.layers = (
+            nn.ModuleDict()
+        )  # to write the different layers of the pytorch regression model
         self.hyperparams: dict = {}  # to write the hyperparams of the model
-        
+
         """
         The structure in S_layers is a dict with three layers: input, hidden, and output, each one can have 
         six params: id, layer type, dropout, normalize, and activation, in that order.
@@ -112,39 +111,42 @@ class Pytorch_FFNN_Regressor(nn.Module):
                 'optimizer': 'Adam',
     }        
         }
-        """ 
+        """
         # Lets navigate over dict structure that shows the NN
-        for key, layer in S_layers.items():  # there are three layers: input, hidden, and output
-            if key == 'hidden_layers':
-                for hidden in layer['hlayers']:
-                    self.layers[f"{hidden['id']}"] = hidden['layer']
-                    if 'dropout' in hidden.keys():
-                        self.layers[f"{hidden['id']}_dropout"] = hidden['dropout']
-                    if 'normalize' in hidden.keys():
-                        self.layers[f"{hidden['id']}_normalize"] = hidden['normalize']
-                    if 'activation' in hidden.keys():
-                        self.layers[f"{hidden['id']}_activation"] = hidden['activation']
-            
-            elif key == 'hyperparams':              
-                self.hyperparams['batch_size'] = layer['batch_size']
-                self.hyperparams['lr'] = layer['lr']
-                self.hyperparams['num_epochs'] = layer['num_epochs']
-                self.hyperparams['loss_func'] = layer['loss_func']
-                self.hyperparams['optimizer'] = Pytorch_Optimizers(layer['optimizer']).optimizer(
-                    self.parameters(), lr=self.hyperparams['lr'])
-                
+        for (
+            key,
+            layer,
+        ) in S_layers.items():  # there are three layers: input, hidden, and output
+            if key == "hidden_layers":
+                for hidden in layer["hlayers"]:
+                    self.layers[f"{hidden['id']}"] = hidden["layer"]
+                    if "dropout" in hidden.keys():
+                        self.layers[f"{hidden['id']}_dropout"] = hidden["dropout"]
+                    if "normalize" in hidden.keys():
+                        self.layers[f"{hidden['id']}_normalize"] = hidden["normalize"]
+                    if "activation" in hidden.keys():
+                        self.layers[f"{hidden['id']}_activation"] = hidden["activation"]
+
+            elif key == "hyperparams":
+                self.hyperparams["batch_size"] = layer["batch_size"]
+                self.hyperparams["lr"] = layer["lr"]
+                self.hyperparams["num_epochs"] = layer["num_epochs"]
+                self.hyperparams["loss_func"] = layer["loss_func"]
+                self.hyperparams["optimizer"] = Pytorch_Optimizers(
+                    layer["optimizer"]
+                ).optimizer(self.parameters(), lr=self.hyperparams["lr"])
+
             else:
-                self.layers[f"{layer['id']}"] = layer['layer']
-                if 'dropout' in layer.keys():
-                    self.layers[f"{layer['id']}_dropout"] = layer['dropout']
-                if 'normalize' in layer.keys():
-                    self.layers[f"{layer['id']}_normalize"] = layer['normalize']
-                if 'activation' in layer.keys():
-                    self.layers[f"{layer['id']}_activation"] = layer['activation']
+                self.layers[f"{layer['id']}"] = layer["layer"]
+                if "dropout" in layer.keys():
+                    self.layers[f"{layer['id']}_dropout"] = layer["dropout"]
+                if "normalize" in layer.keys():
+                    self.layers[f"{layer['id']}_normalize"] = layer["normalize"]
+                if "activation" in layer.keys():
+                    self.layers[f"{layer['id']}_activation"] = layer["activation"]
         di_f_logger.info(
-        f"model definition: {self.layers} -- Hyperparams: {self.hyperparams}"
-    )
-                
+            f"model definition: {self.layers} -- Hyperparams: {self.hyperparams}"
+        )
 
     def forward(self, x):
         for layer in self.layers.values():
@@ -153,6 +155,7 @@ class Pytorch_FFNN_Regressor(nn.Module):
 
 
 # Optimizers for deep learning
+
 
 class Di_F_Optimizers:
     subclass: str = None
@@ -175,4 +178,3 @@ class Pytorch_Optimizers(Di_F_Optimizers):
         for opt_dupla in self.list:
             if id == opt_dupla["id"]:
                 self.optimizer = opt_dupla["optim"]
-

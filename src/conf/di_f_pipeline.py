@@ -75,6 +75,7 @@ Di_F_Pipe
             |--- Di_F_Pipe_Classification_Keras
 """
 
+
 # --------- LEVEL 0 -----------------
 class Di_F_Pipe:  # Main class for all the experiments definitions
     class Di_FX_score:  # To record the scores of each model
@@ -91,15 +92,12 @@ class Di_F_Pipe:  # Main class for all the experiments definitions
             self.shuffle = kfold_dict["shuffle"]
 
     def __init__(self, cfg: DictConfig):
-
-        def create_catalogues() -> (
-            dict
-        ):  
-            """ this function inside init method of meta-class is 
+        def create_catalogues() -> dict:
+            """this function inside init method of meta-class is
             to save the catalogue of values of field according w config.yaml
-            
+
             It has no arguments.
-            
+
             The result is a dict that contanis the different catalogues of data
             This will be a dict of {'field (of aList)': [list of values]}
             for example:
@@ -113,23 +111,33 @@ class Di_F_Pipe:  # Main class for all the experiments definitions
                     record, "aList"
                 ):  # Looking for the field aList in each record
                     catalogue[record.field] = record.aList
-            
+
             return catalogue
 
-        self.di_fx: List[str] = []  # This initialize the tag of the final experiment. All started with Di_F_Pipe
+        self.di_fx: List[
+            str
+        ] = (
+            []
+        )  # This initialize the tag of the final experiment. All started with Di_F_Pipe
         self.di_fx.append("Di_F_Pipe")  # Level 0 class of the experiment
 
         self.cfg: DictConfig = cfg  # This load the config.yaml file as a dict named cfg
         self.id: str = self.cfg.general_ml.experiment  # id = client.project.experiment
 
-        self.feature_list = [r.field for r in self.cfg.data_fields.features]   # This grab the feature list from config.yaml
+        self.feature_list = [
+            r.field for r in self.cfg.data_fields.features
+        ]  # This grab the feature list from config.yaml
 
         self.dataPipeline: Any = None  # Data Pipeline pointer
         self.model: Any = None  # ML Pipeline pointer
 
-        self.catalogues: dict = create_catalogues()  #this creates the catalogues of categorical data in features
+        self.catalogues: dict = (
+            create_catalogues()
+        )  # this creates the catalogues of categorical data in features
         self.scores: List[self.Di_FX_score] = None  # model scores array pointer
-        self.kfold = self.Di_FX_Kfold() # In this case initialize kfold with default params.
+        self.kfold = (
+            self.Di_FX_Kfold()
+        )  # In this case initialize kfold with default params.
 
     def load_model(
         self,
@@ -416,38 +424,35 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         #                             validation features & labels,
         #                             test features and labels
 
-        train_features = pd.read_csv(
+        (
+            train_features,
+            train_labels,
+            validation_features,
+            validation_labels,
+            test_features,
+            test_labels,
+        ) = di_f_datapipes.load_spplited(
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.train_features
-            )
-        )
-        train_labels = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.train_labels
-            )
-        )
-        validation_features = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir,
                 self.cfg.file_names.validation_features,
-            )
-        )
-        validation_labels = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.validation_labels
-            )
-        )
-        test_features = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.test_features
-            )
-        )
-        test_labels = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.test_labels
-            )
+            ),
         )
-
+        
         # creating datasets from concatenation of sources
         # In this case we need to concatenate train and validations sets
         X_train = pd.concat([train_features, validation_features], ignore_index=True)
@@ -538,38 +543,35 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
         #                             validation features & labels,
         #                             test features and labels
 
-        train_features = pd.read_csv(
+        (
+            train_features,
+            train_labels,
+            validation_features,
+            validation_labels,
+            test_features,
+            test_labels,
+        ) = di_f_datapipes.load_spplited(
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.train_features
-            )
-        )
-        train_labels = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.train_labels
-            )
-        )
-        validation_features = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir,
                 self.cfg.file_names.validation_features,
-            )
-        )
-        validation_labels = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.validation_labels
-            )
-        )
-        test_features = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.test_features
-            )
-        )
-        test_labels = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.test_labels
-            )
+            ),
         )
-
+        
         # creating the kfold
         kfold = KFold(
             n_splits=self.kfold["n_splits"],
@@ -577,7 +579,7 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
             random_state=self.cfg.general_ml.seed,
         )
         di_f_logger.info(f"Params for Kfold: {self.kfold}")
-        
+
         # creating datasets from concatenation of sources
         # In this case as kfold, we need to concatenate the whole datasets
         kfold_features = pd.concat(
@@ -609,7 +611,7 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
                 self.model,
                 kfold_features,
                 np.ravel(kfold_labels),
-                cv=5,
+                cv=self.kfold['n_splits'],
                 scoring=make_scorer(score["metric"]),
             ).mean()
             scores.append((score["id"], sc))
@@ -901,36 +903,33 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         #                             validation features & labels,
         #                             test features and labels
 
-        train_features = pd.read_csv(
+        (
+            train_features,
+            train_labels,
+            validation_features,
+            validation_labels,
+            test_features,
+            test_labels,
+        ) = di_f_datapipes.load_spplited(
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.train_features
-            )
-        )
-        train_labels = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.train_labels
-            )
-        )
-        validation_features = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir,
                 self.cfg.file_names.validation_features,
-            )
-        )
-        validation_labels = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.validation_labels
-            )
-        )
-        test_features = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.test_features
-            )
-        )
-        test_labels = pd.read_csv(
+            ),
             os.path.join(
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.test_labels
-            )
+            ),
         )
 
         # changing from datasets to tensors
@@ -962,11 +961,14 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         )
 
         train_loader = DataLoader(
-            train_data, batch_size=self.model.hyperparams['batch_size'], shuffle=True, drop_last=True
+            train_data,
+            batch_size=self.model.hyperparams["batch_size"],
+            shuffle=True,
+            drop_last=True,
         )
         validation_loader = DataLoader(
             validation_data,
-            batch_size=self.model.hyperparams['batch_size'],
+            batch_size=self.model.hyperparams["batch_size"],
             shuffle=True,
             drop_last=True,
         )
@@ -997,14 +999,14 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
             scores_t[score["id"]] = 0
 
         self.train_losses = torch.zeros(
-            self.model.hyperparams['num_epochs']
+            self.model.hyperparams["num_epochs"]
         )  # To grab the loss_train for each epoch an see evolution
 
         self.val_losses = torch.zeros(
-            self.model.hyperparams['num_epochs']
+            self.model.hyperparams["num_epochs"]
         )  # To grab loss_val for each epoch an see evolution
 
-        for e in range(self.model.hyperparams['num_epochs']):
+        for e in range(self.model.hyperparams["num_epochs"]):
             # switching to train mode
             self.model.train()
             batch_loss = []  # To grab the loss_train for each batch and then get mean()
@@ -1012,12 +1014,12 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
             for X, y in train_loader:  # steping by each pair X,y of size batch_size
                 y_pred = self.model.forward(X)
 
-                loss = self.model.hyperparams['loss_func'](y_pred, y)
+                loss = self.model.hyperparams["loss_func"](y_pred, y)
 
                 # backpropagation block
-                self.model.hyperparams['optimizer'].zero_grad()  # reinit gradients
+                self.model.hyperparams["optimizer"].zero_grad()  # reinit gradients
                 loss.backward()
-                self.model.hyperparams['optimizer'].step()
+                self.model.hyperparams["optimizer"].step()
                 batch_loss.append(loss.item())
 
                 for score in self.scores:  # Adding each metric for each epoch
@@ -1033,13 +1035,13 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
 
             with torch.no_grad():  # stop gradient descent in eval)
                 y_pred = self.model.forward(X)
-                self.val_losses[e] = self.model.hyperparams['loss_func'](y_pred, y)
+                self.val_losses[e] = self.model.hyperparams["loss_func"](y_pred, y)
 
                 for score in self.scores:  # Adding each metric for each epoch
                     sc = score["metric"](y, y_pred)
                     scores_v[score["id"]] += sc
 
-                if (e + 1) % (self.model.hyperparams['num_epochs'] // 10) == 0:
+                if (e + 1) % (self.model.hyperparams["num_epochs"] // 10) == 0:
                     di_f_logger.info(
                         f"epoch:{e+1}, train loss:{self.train_losses[e]} val loss {self.val_losses[e]}"
                     )
@@ -1049,7 +1051,8 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
             scores.append(
                 (
                     score["id"],
-                    scores_t[score["id"]] / (self.model.hyperparams['num_epochs'] * len(train_loader)),
+                    scores_t[score["id"]]
+                    / (self.model.hyperparams["num_epochs"] * len(train_loader)),
                 )
             )
         # plotting loss curves in corresponding directory defined in config.yaml file
@@ -1064,7 +1067,12 @@ class Di_F_Pipe_Regression_Pytorch(Di_F_Pipe_Regression):
         #  reinitializing scores dict now to prepare for results label of validation
         scores = []
         for score in self.scores:  # geting mean of each metric for each epoch
-            scores.append((score["id"], scores_v[score["id"]] / self.model.hyperparams['num_epochs']))
+            scores.append(
+                (
+                    score["id"],
+                    scores_v[score["id"]] / self.model.hyperparams["num_epochs"],
+                )
+            )
 
         #  writting label validation of results dict
         results["validation"] = scores
