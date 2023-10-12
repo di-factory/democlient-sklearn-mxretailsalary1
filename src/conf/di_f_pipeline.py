@@ -452,7 +452,7 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.test_labels
             ),
         )
-        
+
         # creating datasets from concatenation of sources
         # In this case we need to concatenate train and validations sets
         X_train = pd.concat([train_features, validation_features], ignore_index=True)
@@ -571,7 +571,7 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
                 self.cfg.paths.processed_data_dir, self.cfg.file_names.test_labels
             ),
         )
-        
+
         # creating the kfold
         kfold = KFold(
             n_splits=self.kfold["n_splits"],
@@ -611,7 +611,7 @@ class Di_F_Pipe_Regression_Pycaret(Di_F_Pipe_Regression):
                 self.model,
                 kfold_features,
                 np.ravel(kfold_labels),
-                cv=self.kfold['n_splits'],
+                cv=self.kfold["n_splits"],
                 scoring=make_scorer(score["metric"]),
             ).mean()
             scores.append((score["id"], sc))
